@@ -9,6 +9,7 @@ import type { UserType } from "../types/user.types";
 import { UserCard } from "./UserCard";
 
 export const UserList: React.FC = () => {
+	const [allUsers, setAllUsers] = useState<UserType[]>([]);
 	const [users, setUsers] = useState<UserType[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -19,39 +20,76 @@ export const UserList: React.FC = () => {
 	const [gender, setGender] = useState<string>("");
 
 	/**
-	 * Fetches users data with current filter state
+	 * Fetches all users data once
 	 * Handles loading states and error conditions
 	 */
-	const fetchUsersData = useCallback(async () => {
+	const fetchAllUsersData = useCallback(async () => {
 		setLoading(true);
 		setError(null);
 
 		try {
-			const result = await fetchUsers({ search, role, status, gender });
+			const result = await fetchUsers({}); // Fetch all without filters
 
 			if ("error" in result) {
 				setError(result.error);
+				setAllUsers([]);
 				setUsers([]);
 			} else {
+				setAllUsers(result.users);
 				setUsers(result.users);
 			}
 		} catch (error) {
 			setError(`Failed to fetch users, ${String(error)}`);
+			setAllUsers([]);
 			setUsers([]);
 		} finally {
 			setLoading(false);
 		}
-	}, [search, role, status, gender]);
+	}, []);
+
+	/**
+	 * Applies filters to the allUsers array and updates users state
+	 */
+	const applyFilters = useCallback(() => {
+		let filtered = allUsers;
+
+		const filters = { search, role, status, gender };
+
+		if (filters.search) {
+			const searchLower = filters.search.toLowerCase();
+			filtered = filtered.filter(
+				(user) =>
+					user.name.first.toLowerCase().includes(searchLower) ||
+					user.name.last.toLowerCase().includes(searchLower) ||
+					user.email.toLowerCase().includes(searchLower),
+			);
+		}
+
+		if (filters.role) {
+			filtered = filtered.filter((user) => user.role === filters.role);
+		}
+
+		if (filters.status) {
+			filtered = filtered.filter((user) => user.status === filters.status);
+		}
+
+		if (filters.gender) {
+			filtered = filtered.filter((user) => user.gender === filters.gender);
+		}
+
+		setUsers(filtered);
+	}, [allUsers, search, role, status, gender]);
 
 	useEffect(() => {
 		let isMounted = true;
 
 		const loadData = async () => {
 			try {
-				await fetchUsersData();
+				await fetchAllUsersData();
 			} catch (error) {
 				if (isMounted) {
 					setError(`Failed to fetch users, ${String(error)}`);
+					setAllUsers([]);
 					setUsers([]);
 					setLoading(false);
 				}
@@ -63,7 +101,11 @@ export const UserList: React.FC = () => {
 		return () => {
 			isMounted = false;
 		};
-	}, [fetchUsersData]);
+	}, [fetchAllUsersData]);
+
+	useEffect(() => {
+		applyFilters();
+	}, [applyFilters]);
 
 	/**
 	 * Toggles the status of a user between active and inactive
@@ -124,11 +166,9 @@ export const UserList: React.FC = () => {
 	const statusSelectClassName = "lg:col-span-1";
 	const genderSelectClassName = "lg:col-span-1";
 	const buttonsContainerClassName = "lg:col-span-1 flex items-center gap-2";
-	const searchButtonClassName =
-		"flex-1 py-4 bg-indigo-400 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200";
 	const clearButtonClassName =
 		"px-4 py-4 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200";
-	const resultsSectionClassName = "aria-labelledby=results-heading";
+	const resultsSectionClassName = "";
 	const resultsHeaderClassName = "flex justify-between items-center mb-4";
 	const resultsTitleClassName = "text-2xl font-bold text-gray-900";
 	const resultsCountClassName = "text-gray-200 mt-1";
@@ -172,7 +212,7 @@ export const UserList: React.FC = () => {
 					</div>
 				</div>
 
-				<form className={formClassName}>
+				<form className={formClassName} onSubmit={(e) => e.preventDefault()}>
 					<div className={searchInputClassName}>
 						<Input
 							label="Search Users"
@@ -212,26 +252,20 @@ export const UserList: React.FC = () => {
 
 					<div className={buttonsContainerClassName}>
 						<Button
-							onClick={fetchUsersData}
-							loading={loading}
-							className={searchButtonClassName}
-						>
-							<span className="flex items-center justify-center gap-2">
-								🔍 Search
-							</span>
-						</Button>
-						<Button
 							onClick={handleClickClearFilters}
 							variant="secondary"
 							className={clearButtonClassName}
 						>
-							Clear
+							Clear Filters
 						</Button>
 					</div>
 				</form>
 			</section>
 
-			<section className={resultsSectionClassName}>
+			<section
+				className={resultsSectionClassName}
+				aria-labelledby="results-heading"
+			>
 				<header className={resultsHeaderClassName}>
 					<div>
 						<h3 id="results-heading" className={resultsTitleClassName}>

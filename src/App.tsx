@@ -10,7 +10,10 @@ function App() {
 							<span className="text-white text-2xl">👤</span>
 						</div>
 						<div>
-							<h1 className="text-4xl font-bold text-gray-900">
+							<h1
+								id="user-list-heading"
+								className="text-4xl font-bold text-gray-900"
+							>
 								User Directory
 							</h1>
 							<p className="text-gray-200 mt-1">

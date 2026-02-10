@@ -100,8 +100,8 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 				</div>
 			</header>
 
-			<main className="px-8 pb-4">
-				<div className="grid grid-cols-1 gap-3 text-sm">
+			<section className="px-8 pb-4">
+				<dl className="grid grid-cols-1 gap-3 text-sm">
 					<div className={locationCardClassName}>
 						<span className="text-gray-400">📍</span>
 						<div>
@@ -127,8 +127,8 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 							</dd>
 						</div>
 					</div>
-				</div>
-			</main>
+				</dl>
+			</section>
 
 			<footer className="px-8 pb-6">
 				<Button

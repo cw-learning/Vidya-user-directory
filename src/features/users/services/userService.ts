@@ -1,6 +1,7 @@
 import { API_CONFIG, API_ENDPOINTS } from "../../../constants/apiEndpoints";
 import type { UserRoleType } from "../../../constants/userRoles";
 import { USER_ROLES } from "../../../constants/userRoles";
+import type { UserStatusType } from "../../../constants/userStatus";
 import { USER_STATUS } from "../../../constants/userStatus";
 import type { UserType } from "../types/user.types";
 import type {
@@ -11,19 +12,22 @@ import type {
 
 const AVAILABLE_ROLES: UserRoleType[] = Object.values(USER_ROLES);
 
-const AVAILABLE_STATUSES: (typeof USER_STATUS)[keyof typeof USER_STATUS][] =
-	Object.values(USER_STATUS);
+const AVAILABLE_STATUSES: UserStatusType[] = Object.values(USER_STATUS);
 
-const getRandomItem = <T>(items: readonly T[]): T => {
-	if (items.length === 0) {
-		throw new Error("Cannot get random item from empty array");
+/**
+ * Generates a deterministic index based on UUID
+ * @param uuid - The user's UUID
+ * @param length - The length of the array to choose from
+ * @returns A deterministic index
+ */
+const getDeterministicIndex = (uuid: string, length: number): number => {
+	let hash = 0;
+	for (let i = 0; i < uuid.length; i++) {
+		const char = uuid.charCodeAt(i);
+		hash = (hash << 5) - hash + char;
+		hash = hash & hash; // Convert to 32bit integer
 	}
-	const randomIndex = Math.floor(Math.random() * items.length);
-	const item = items[randomIndex];
-	if (item === undefined) {
-		throw new Error("Unexpected undefined item in array");
-	}
-	return item;
+	return Math.abs(hash) % length;
 };
 
 /**
@@ -32,6 +36,18 @@ const getRandomItem = <T>(items: readonly T[]): T => {
  * @returns Mapped User object with our internal structure
  */
 const mapRandomUserToUser = (user: RandomUserResultType): UserType => {
+	const role =
+		AVAILABLE_ROLES[
+		getDeterministicIndex(user.login.uuid, AVAILABLE_ROLES.length)
+		] ?? USER_ROLES.ADMIN;
+
+	const status =
+		AVAILABLE_STATUSES[
+		getDeterministicIndex(
+			`${user.login.uuid}status`,
+			AVAILABLE_STATUSES.length,
+		)
+		] ?? USER_STATUS.ACTIVE;
 	return {
 		id: user.login.uuid,
 		name: user.name,
@@ -39,8 +55,8 @@ const mapRandomUserToUser = (user: RandomUserResultType): UserType => {
 		gender: user.gender,
 		location: { city: user.location.city, country: user.location.country },
 		picture: { thumbnail: user.picture.thumbnail },
-		role: getRandomItem(AVAILABLE_ROLES),
-		status: getRandomItem(AVAILABLE_STATUSES),
+		role: role,
+		status: status,
 		registered: user.registered,
 	};
 };
@@ -63,16 +79,84 @@ const validateApiResponse = (
 		throw new Error("Invalid API response: results is not an array");
 	}
 
-	// Validate first result structure if array is not empty
-	if (response.results.length > 0) {
-		const firstResult = response.results[0];
-		if (!firstResult || typeof firstResult !== "object") {
+	for (const result of response.results) {
+		if (!result || typeof result !== "object") {
 			throw new Error("Invalid API response: result items are not objects");
 		}
 
-		const result = firstResult as Record<string, unknown>;
-		if (!result.login || !result.name || !result.email) {
-			throw new Error("Invalid API response: missing required user fields");
+		const user = result as Record<string, unknown>;
+		if (!user.login || typeof user.login !== "object") {
+			throw new Error("Invalid API response: missing or invalid login field");
+		}
+		const login = user.login as Record<string, unknown>;
+		if (!login.uuid || typeof login.uuid !== "string") {
+			throw new Error("Invalid API response: missing or invalid login.uuid");
+		}
+
+		if (!user.name || typeof user.name !== "object") {
+			throw new Error("Invalid API response: missing or invalid name field");
+		}
+		const name = user.name as Record<string, unknown>;
+		if (
+			!name.first ||
+			typeof name.first !== "string" ||
+			!name.last ||
+			typeof name.last !== "string"
+		) {
+			throw new Error(
+				"Invalid API response: missing or invalid name.first or name.last",
+			);
+		}
+
+		if (typeof user.email !== "string") {
+			throw new Error("Invalid API response: missing or invalid email");
+		}
+
+		if (typeof user.gender !== "string") {
+			throw new Error("Invalid API response: missing or invalid gender");
+		}
+
+		if (!user.location || typeof user.location !== "object") {
+			throw new Error(
+				"Invalid API response: missing or invalid location field",
+			);
+		}
+		const location = user.location as Record<string, unknown>;
+		if (
+			!location.city ||
+			typeof location.city !== "string" ||
+			!location.country ||
+			typeof location.country !== "string"
+		) {
+			throw new Error(
+				"Invalid API response: missing or invalid location.city or location.country",
+			);
+		}
+
+		if (!user.picture || typeof user.picture !== "object") {
+			throw new Error("Invalid API response: missing or invalid picture field");
+		}
+		const picture = user.picture as Record<string, unknown>;
+		if (!picture.thumbnail || typeof picture.thumbnail !== "string") {
+			throw new Error(
+				"Invalid API response: missing or invalid picture.thumbnail",
+			);
+		}
+
+		if (!user.registered || typeof user.registered !== "object") {
+			throw new Error(
+				"Invalid API response: missing or invalid registered field",
+			);
+		}
+		const registered = user.registered as Record<string, unknown>;
+		if (
+			!registered.date ||
+			typeof registered.date !== "string" ||
+			typeof registered.age !== "number"
+		) {
+			throw new Error(
+				"Invalid API response: missing or invalid registered.date or registered.age",
+			);
 		}
 	}
 

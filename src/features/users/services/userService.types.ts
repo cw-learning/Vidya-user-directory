@@ -1,3 +1,5 @@
+import type { UserRoleType } from "../../../constants/userRoles";
+import type { UserStatusType } from "../../../constants/userStatus";
 import type { UserGenderType } from "../types/user.types";
 
 export type RandomUserNameType = {
@@ -38,7 +40,7 @@ export type RandomUserApiResponseType = {
 
 export type UserFiltersType = {
 	search?: string;
-	role?: string;
-	status?: string;
-	gender?: string;
+	role?: UserRoleType | "";
+	status?: UserStatusType | "";
+	gender?: UserGenderType | "";
 };

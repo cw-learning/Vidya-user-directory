@@ -1,4 +1,5 @@
 import type { ChangeEvent, FC } from "react";
+import { useId } from "react";
 
 interface InputProps {
 	label: string;
@@ -6,6 +7,7 @@ interface InputProps {
 	onChange: (value: string) => void;
 	type?: string;
 	placeholder?: string;
+	id?: string;
 }
 
 export const Input: FC<InputProps> = ({
@@ -14,7 +16,11 @@ export const Input: FC<InputProps> = ({
 	onChange,
 	type = "text",
 	placeholder,
+	id,
 }) => {
+	const generatedId = useId();
+	const inputId = id ?? generatedId;
+
 	const handleOnChangeInput = (event: ChangeEvent<HTMLInputElement>) => {
 		onChange(event.target.value);
 	};
@@ -22,13 +28,13 @@ export const Input: FC<InputProps> = ({
 	return (
 		<div className="mb-4">
 			<label
-				htmlFor={label}
+				htmlFor={inputId}
 				className="block text-sm font-medium text-gray-700 mb-1"
 			>
 				{label}
 			</label>
 			<input
-				id={label}
+				id={inputId}
 				type={type}
 				value={value}
 				onChange={handleOnChangeInput}
