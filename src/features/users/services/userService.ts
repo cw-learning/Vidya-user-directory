@@ -3,7 +3,7 @@ import type { UserRoleType } from "../../../constants/userRoles";
 import { USER_ROLES } from "../../../constants/userRoles";
 import type { UserStatusType } from "../../../constants/userStatus";
 import { USER_STATUS } from "../../../constants/userStatus";
-import type { UserGenderType, UserType } from "../types/user.types";
+import { UserGenderType, type UserType } from "../types/user.types";
 import type {
 	JsonPlaceholderApiResponseType,
 	JsonPlaceholderUserType,
@@ -25,7 +25,7 @@ const getDeterministicIndex = (uuid: string, length: number): number => {
 	for (let i = 0; i < uuid.length; i++) {
 		const char = uuid.charCodeAt(i);
 		hash = (hash << 5) - hash + char;
-		hash = hash & hash; // Convert to 32bit integer
+		hash = hash & hash;
 	}
 	return Math.abs(hash) % length;
 };
@@ -51,11 +51,16 @@ const mapJsonPlaceholderUserToUser = (
 		AVAILABLE_STATUSES[
 			getDeterministicIndex(`${user.id}status`, AVAILABLE_STATUSES.length)
 		] ?? USER_STATUS.ACTIVE;
+
+	const gender =
+		getDeterministicIndex(`${user.id}gender`, 2) === 0
+			? UserGenderType.MALE
+			: UserGenderType.FEMALE;
 	return {
 		id: user.id.toString(),
 		name: { first, last },
 		email: user.email,
-		gender: "male" as UserGenderType,
+		gender: gender,
 		location: { city: user.address.city, country: "Unknown" },
 		role: role,
 		status: status,
@@ -110,7 +115,7 @@ const validateApiResponse = (
  * @throws Error if API request fails, times out, or returns invalid data
  */
 const fetchUsersFromApi = async (): Promise<UserType[]> => {
-	const response = await fetch(API_ENDPOINTS.RANDOM_USER, {
+	const response = await fetch(API_ENDPOINTS.USERS, {
 		signal: AbortSignal.timeout(API_CONFIG.REQUEST_TIMEOUT),
 	});
 

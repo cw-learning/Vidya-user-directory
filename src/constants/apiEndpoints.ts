@@ -1,5 +1,5 @@
 export const API_ENDPOINTS = {
-	RANDOM_USER: "https://jsonplaceholder.typicode.com/users",
+	USERS: "https://jsonplaceholder.typicode.com/users",
 } as const;
 
 export const API_CONFIG = {
