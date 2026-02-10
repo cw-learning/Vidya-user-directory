@@ -49,14 +49,12 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 		"group relative bg-white/75 border border-gray-200 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-1";
 	const statusBadgeClassName = `flex items-center gap-1 px-4 py-4 rounded-full text-xs font-semibold border shadow-sm ${getStatusColor(user.status)}`;
 	const profileImageClassName =
-		"w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover";
+		"w-20 h-20 rounded-full border-4 border-white shadow-lg";
 	const genderBadgeClassName =
 		"absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-md";
 	const roleBadgeClassName =
 		"inline-flex items-center gap-2 px-8 py-4 bg-blue-50 text-blue-700 rounded-full text-sm font-medium";
 	const locationCardClassName =
-		"flex items-center gap-4 p-4 bg-gray-50 rounded-lg";
-	const memberSinceCardClassName =
 		"flex items-center gap-4 p-4 bg-gray-50 rounded-lg";
 	const toggleButtonClassName =
 		"w-full py-4 text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105";
@@ -74,12 +72,12 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 
 			<header className="pt-8 pb-4 px-8 text-center">
 				<div className="relative inline-block mb-4">
-					<img
-						src={user.picture.thumbnail}
-						alt={`Profile of ${fullName}`}
-						className={profileImageClassName}
-						loading="lazy"
-					/>
+					<div
+						className={`${profileImageClassName} bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xl`}
+					>
+						{user.name.first[0]}
+						{user.name.last[0]}
+					</div>
 					<div className={genderBadgeClassName}>
 						<span
 							className="text-xl"
@@ -113,17 +111,6 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 								title={`${user.location.city}, ${user.location.country}`}
 							>
 								{user.location.city}, {user.location.country}
-							</dd>
-						</div>
-					</div>
-					<div className={memberSinceCardClassName}>
-						<span className="text-gray-400">📅</span>
-						<div>
-							<dt className="font-medium text-gray-500 text-xs uppercase tracking-wide">
-								Member Since
-							</dt>
-							<dd className="text-gray-900 font-medium">
-								{user.registered.age} years ago
 							</dd>
 						</div>
 					</div>

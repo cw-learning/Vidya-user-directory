@@ -1,62 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { UserRoleType } from "../../../constants/userRoles";
 import { getRoleOptions } from "../../../constants/userRoles";
+import type { UserStatusType } from "../../../constants/userStatus";
 import { USER_STATUS } from "../../../constants/userStatus";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
 import { Select } from "../../../shared/components/Select";
 import { fetchUsers } from "../services/userService";
-import type { UserType } from "../types/user.types";
+import type { UserGenderType, UserType } from "../types/user.types";
 import { UserCard } from "./UserCard";
 
 export const UserList: React.FC = () => {
 	const [allUsers, setAllUsers] = useState<UserType[]>([]);
-	const [users, setUsers] = useState<UserType[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	const [search, setSearch] = useState<string>("");
-	const [role, setRole] = useState<string>("");
-	const [status, setStatus] = useState<string>("");
-	const [gender, setGender] = useState<string>("");
+	const [role, setRole] = useState<UserRoleType | "">("");
+	const [status, setStatus] = useState<UserStatusType | "">("");
+	const [gender, setGender] = useState<UserGenderType | "">("");
 
-	/**
-	 * Fetches all users data once
-	 * Handles loading states and error conditions
-	 */
-	const fetchAllUsersData = useCallback(async () => {
-		setLoading(true);
-		setError(null);
-
-		try {
-			const result = await fetchUsers({}); // Fetch all without filters
-
-			if ("error" in result) {
-				setError(result.error);
-				setAllUsers([]);
-				setUsers([]);
-			} else {
-				setAllUsers(result.users);
-				setUsers(result.users);
-			}
-		} catch (error) {
-			setError(`Failed to fetch users, ${String(error)}`);
-			setAllUsers([]);
-			setUsers([]);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
-
-	/**
-	 * Applies filters to the allUsers array and updates users state
-	 */
-	const applyFilters = useCallback(() => {
+	const filteredUsers = useMemo(() => {
 		let filtered = allUsers;
 
-		const filters = { search, role, status, gender };
-
-		if (filters.search) {
-			const searchLower = filters.search.toLowerCase();
+		if (search) {
+			const searchLower = search.toLowerCase();
 			filtered = filtered.filter(
 				(user) =>
 					user.name.first.toLowerCase().includes(searchLower) ||
@@ -65,54 +33,56 @@ export const UserList: React.FC = () => {
 			);
 		}
 
-		if (filters.role) {
-			filtered = filtered.filter((user) => user.role === filters.role);
+		if (role) {
+			filtered = filtered.filter((user) => user.role === role);
 		}
 
-		if (filters.status) {
-			filtered = filtered.filter((user) => user.status === filters.status);
+		if (status) {
+			filtered = filtered.filter((user) => user.status === status);
 		}
 
-		if (filters.gender) {
-			filtered = filtered.filter((user) => user.gender === filters.gender);
+		if (gender) {
+			filtered = filtered.filter((user) => user.gender === gender);
 		}
 
-		setUsers(filtered);
+		return filtered;
 	}, [allUsers, search, role, status, gender]);
 
-	useEffect(() => {
-		let isMounted = true;
+	/**
+	 * Fetches all users data once
+	 * Handles loading states and error conditions
+	 */
+	const fetchAllUsersData = useCallback(async (): Promise<void> => {
+		setLoading(true);
+		setError(null);
 
-		const loadData = async () => {
-			try {
-				await fetchAllUsersData();
-			} catch (error) {
-				if (isMounted) {
-					setError(`Failed to fetch users, ${String(error)}`);
-					setAllUsers([]);
-					setUsers([]);
-					setLoading(false);
-				}
+		try {
+			const result = await fetchUsers({});
+
+			if ("error" in result) {
+				setError(result.error);
+				setAllUsers([]);
+			} else {
+				setAllUsers(result.users);
 			}
-		};
-
-		loadData();
-
-		return () => {
-			isMounted = false;
-		};
-	}, [fetchAllUsersData]);
+		} catch (error) {
+			setError(`Failed to fetch users, ${String(error)}`);
+			setAllUsers([]);
+		} finally {
+			setLoading(false);
+		}
+	}, []);
 
 	useEffect(() => {
-		applyFilters();
-	}, [applyFilters]);
+		fetchAllUsersData();
+	}, [fetchAllUsersData]);
 
 	/**
 	 * Toggles the status of a user between active and inactive
 	 * @param id - The user ID to toggle status for
 	 */
 	const handleClickToggleStatus = (id: string) => {
-		setUsers((prev) =>
+		setAllUsers((prev) =>
 			prev.map((user) =>
 				user.id === id
 					? {
@@ -136,6 +106,13 @@ export const UserList: React.FC = () => {
 		setStatus("");
 		setGender("");
 	};
+
+	const handleRoleChange = (value: string) =>
+		setRole(value as UserRoleType | "");
+	const handleStatusChange = (value: string) =>
+		setStatus(value as UserStatusType | "");
+	const handleGenderChange = (value: string) =>
+		setGender(value as UserGenderType | "");
 
 	const roleOptions = [{ value: "", label: "All Roles" }, ...getRoleOptions()];
 
@@ -227,7 +204,7 @@ export const UserList: React.FC = () => {
 						<Select
 							label="Role"
 							value={role}
-							onChange={setRole}
+							onChange={handleRoleChange}
 							options={roleOptions}
 						/>
 					</div>
@@ -236,7 +213,7 @@ export const UserList: React.FC = () => {
 						<Select
 							label="Status"
 							value={status}
-							onChange={setStatus}
+							onChange={handleStatusChange}
 							options={statusOptions}
 						/>
 					</div>
@@ -245,7 +222,7 @@ export const UserList: React.FC = () => {
 						<Select
 							label="Gender"
 							value={gender}
-							onChange={setGender}
+							onChange={handleGenderChange}
 							options={genderOptions}
 						/>
 					</div>
@@ -272,10 +249,11 @@ export const UserList: React.FC = () => {
 							Users
 						</h3>
 						<p className={resultsCountClassName}>
-							{users.length} {users.length === 1 ? "user" : "users"} found
+							{filteredUsers.length}{" "}
+							{filteredUsers.length === 1 ? "user" : "users"} found
 						</p>
 					</div>
-					{!loading && !error && users.length > 0 && (
+					{!loading && !error && filteredUsers.length > 0 && (
 						<div className={resultsStatusClassName}>
 							<span className={statusIndicatorClassName}></span>
 							Updated just now
@@ -301,7 +279,7 @@ export const UserList: React.FC = () => {
 					</div>
 				)}
 
-				{!loading && !error && users.length === 0 && (
+				{!loading && !error && filteredUsers.length === 0 && (
 					<div className={emptyStateClassName}>
 						<div className={emptyStateIconClassName}>👤</div>
 						<p className={emptyStateTitleClassName}>No users found</p>
@@ -311,9 +289,9 @@ export const UserList: React.FC = () => {
 					</div>
 				)}
 
-				{!loading && !error && users.length > 0 && (
+				{!loading && !error && filteredUsers.length > 0 && (
 					<div className={usersGridClassName}>
-						{users.map((user) => (
+						{filteredUsers.map((user) => (
 							<UserCard
 								key={user.id}
 								user={user}

@@ -3,10 +3,10 @@ import type { UserRoleType } from "../../../constants/userRoles";
 import { USER_ROLES } from "../../../constants/userRoles";
 import type { UserStatusType } from "../../../constants/userStatus";
 import { USER_STATUS } from "../../../constants/userStatus";
-import type { UserType } from "../types/user.types";
+import type { UserGenderType, UserType } from "../types/user.types";
 import type {
-	RandomUserApiResponseType,
-	RandomUserResultType,
+	JsonPlaceholderApiResponseType,
+	JsonPlaceholderUserType,
 	UserFiltersType,
 } from "./userService.types";
 
@@ -31,33 +31,34 @@ const getDeterministicIndex = (uuid: string, length: number): number => {
 };
 
 /**
- * Maps a Random User API result to our internal User type
- * @param user - The raw user data from Random User API
+ * Maps a JSON Placeholder user to our internal User type
+ * @param user - The raw user data from JSON Placeholder API
  * @returns Mapped User object with our internal structure
  */
-const mapRandomUserToUser = (user: RandomUserResultType): UserType => {
+const mapJsonPlaceholderUserToUser = (
+	user: JsonPlaceholderUserType,
+): UserType => {
+	const nameParts = user.name.split(" ");
+	const first = nameParts[0] || "Unknown";
+	const last = nameParts.slice(1).join(" ") || "User";
+
 	const role =
 		AVAILABLE_ROLES[
-		getDeterministicIndex(user.login.uuid, AVAILABLE_ROLES.length)
+			getDeterministicIndex(user.id.toString(), AVAILABLE_ROLES.length)
 		] ?? USER_ROLES.ADMIN;
 
 	const status =
 		AVAILABLE_STATUSES[
-		getDeterministicIndex(
-			`${user.login.uuid}status`,
-			AVAILABLE_STATUSES.length,
-		)
+			getDeterministicIndex(`${user.id}status`, AVAILABLE_STATUSES.length)
 		] ?? USER_STATUS.ACTIVE;
 	return {
-		id: user.login.uuid,
-		name: user.name,
+		id: user.id.toString(),
+		name: { first, last },
 		email: user.email,
-		gender: user.gender,
-		location: { city: user.location.city, country: user.location.country },
-		picture: { thumbnail: user.picture.thumbnail },
+		gender: "male" as UserGenderType,
+		location: { city: user.address.city, country: "Unknown" },
 		role: role,
 		status: status,
-		registered: user.registered,
 	};
 };
 
@@ -68,95 +69,35 @@ const mapRandomUserToUser = (user: RandomUserResultType): UserType => {
  */
 const validateApiResponse = (
 	data: unknown,
-): data is RandomUserApiResponseType => {
-	if (!data || typeof data !== "object") {
-		throw new Error("Invalid API response: not an object");
+): data is JsonPlaceholderApiResponseType => {
+	if (!Array.isArray(data)) {
+		throw new Error("Invalid API response: not an array");
 	}
 
-	const response = data as Record<string, unknown>;
-
-	if (!Array.isArray(response.results)) {
-		throw new Error("Invalid API response: results is not an array");
-	}
-
-	for (const result of response.results) {
-		if (!result || typeof result !== "object") {
-			throw new Error("Invalid API response: result items are not objects");
+	for (const user of data) {
+		if (!user || typeof user !== "object") {
+			throw new Error("Invalid API response: user items are not objects");
 		}
 
-		const user = result as Record<string, unknown>;
-		if (!user.login || typeof user.login !== "object") {
-			throw new Error("Invalid API response: missing or invalid login field");
-		}
-		const login = user.login as Record<string, unknown>;
-		if (!login.uuid || typeof login.uuid !== "string") {
-			throw new Error("Invalid API response: missing or invalid login.uuid");
+		const u = user as Record<string, unknown>;
+		if (typeof u.id !== "number") {
+			throw new Error("Invalid API response: missing or invalid id");
 		}
 
-		if (!user.name || typeof user.name !== "object") {
-			throw new Error("Invalid API response: missing or invalid name field");
-		}
-		const name = user.name as Record<string, unknown>;
-		if (
-			!name.first ||
-			typeof name.first !== "string" ||
-			!name.last ||
-			typeof name.last !== "string"
-		) {
-			throw new Error(
-				"Invalid API response: missing or invalid name.first or name.last",
-			);
+		if (typeof u.name !== "string") {
+			throw new Error("Invalid API response: missing or invalid name");
 		}
 
-		if (typeof user.email !== "string") {
+		if (typeof u.email !== "string") {
 			throw new Error("Invalid API response: missing or invalid email");
 		}
 
-		if (typeof user.gender !== "string") {
-			throw new Error("Invalid API response: missing or invalid gender");
+		if (!u.address || typeof u.address !== "object") {
+			throw new Error("Invalid API response: missing or invalid address");
 		}
-
-		if (!user.location || typeof user.location !== "object") {
-			throw new Error(
-				"Invalid API response: missing or invalid location field",
-			);
-		}
-		const location = user.location as Record<string, unknown>;
-		if (
-			!location.city ||
-			typeof location.city !== "string" ||
-			!location.country ||
-			typeof location.country !== "string"
-		) {
-			throw new Error(
-				"Invalid API response: missing or invalid location.city or location.country",
-			);
-		}
-
-		if (!user.picture || typeof user.picture !== "object") {
-			throw new Error("Invalid API response: missing or invalid picture field");
-		}
-		const picture = user.picture as Record<string, unknown>;
-		if (!picture.thumbnail || typeof picture.thumbnail !== "string") {
-			throw new Error(
-				"Invalid API response: missing or invalid picture.thumbnail",
-			);
-		}
-
-		if (!user.registered || typeof user.registered !== "object") {
-			throw new Error(
-				"Invalid API response: missing or invalid registered field",
-			);
-		}
-		const registered = user.registered as Record<string, unknown>;
-		if (
-			!registered.date ||
-			typeof registered.date !== "string" ||
-			typeof registered.age !== "number"
-		) {
-			throw new Error(
-				"Invalid API response: missing or invalid registered.date or registered.age",
-			);
+		const address = u.address as Record<string, unknown>;
+		if (typeof address.city !== "string") {
+			throw new Error("Invalid API response: missing or invalid address.city");
 		}
 	}
 
@@ -164,17 +105,14 @@ const validateApiResponse = (
 };
 
 /**
- * Fetches users from the Random User API
+ * Fetches users from the JSON Placeholder API
  * @returns Promise resolving to array of User objects
  * @throws Error if API request fails, times out, or returns invalid data
  */
 const fetchUsersFromApi = async (): Promise<UserType[]> => {
-	const response = await fetch(
-		`${API_ENDPOINTS.RANDOM_USER}?results=${API_CONFIG.ATHLETES_FETCH_COUNT}`,
-		{
-			signal: AbortSignal.timeout(API_CONFIG.REQUEST_TIMEOUT),
-		},
-	);
+	const response = await fetch(API_ENDPOINTS.RANDOM_USER, {
+		signal: AbortSignal.timeout(API_CONFIG.REQUEST_TIMEOUT),
+	});
 
 	if (!response.ok) {
 		throw new Error(`API request failed with status ${response.status}`);
@@ -186,7 +124,7 @@ const fetchUsersFromApi = async (): Promise<UserType[]> => {
 		throw new Error("API response validation failed");
 	}
 
-	return data.results.map(mapRandomUserToUser);
+	return data.map(mapJsonPlaceholderUserToUser);
 };
 
 const applyFilters = (

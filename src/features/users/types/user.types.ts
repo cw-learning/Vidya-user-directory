@@ -11,10 +11,6 @@ export type UserLocationType = {
 	country: string;
 };
 
-export type UserPictureType = {
-	thumbnail: string;
-};
-
 export enum UserGenderType {
 	MALE = "male",
 	FEMALE = "female",
@@ -26,11 +22,6 @@ export type UserType = {
 	email: string;
 	gender: UserGenderType;
 	location: UserLocationType;
-	picture: UserPictureType;
 	role: UserRoleType;
 	status: UserStatusType;
-	registered: {
-		date: string;
-		age: number;
-	};
 };
