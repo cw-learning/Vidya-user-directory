@@ -6,11 +6,6 @@ export type UserNameType = {
 	last: string;
 };
 
-export type UserLocationType = {
-	city: string;
-	country: string;
-};
-
 export enum UserGenderType {
 	MALE = "male",
 	FEMALE = "female",
@@ -21,7 +16,7 @@ export type UserType = {
 	name: UserNameType;
 	email: string;
 	gender: UserGenderType;
-	location: UserLocationType;
+	city: string;
 	role: UserRoleType;
 	status: UserStatusType;
 };

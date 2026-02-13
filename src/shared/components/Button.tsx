@@ -1,14 +1,15 @@
 import clsx from "clsx";
+import type { FC, ReactNode } from "react";
 
 type ButtonVariantType = "primary" | "secondary";
 
 type ButtonType = "button" | "submit";
 
-interface ButtonProps {
+export interface ButtonProps {
 	variant?: ButtonVariantType;
 	disabled?: boolean;
 	loading?: boolean;
-	children: React.ReactNode;
+	children: ReactNode;
 	onClick?: () => void;
 	type?: ButtonType;
 	className?: string;
@@ -36,7 +37,7 @@ const getButtonClasses = (
 	);
 };
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button: FC<ButtonProps> = ({
 	variant = "primary",
 	disabled = false,
 	loading = false,
@@ -56,6 +57,8 @@ export const Button: React.FC<ButtonProps> = ({
 			disabled={disabled || loading}
 			onClick={onClick}
 			type={type}
+			aria-busy={loading}
+			aria-live="polite"
 		>
 			{loading ? "Loading..." : children}
 		</button>

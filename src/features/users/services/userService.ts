@@ -61,7 +61,7 @@ const mapJsonPlaceholderUserToUser = (
 		name: { first, last },
 		email: user.email,
 		gender: gender,
-		location: { city: user.address.city, country: "Unknown" },
+		city: user.address.city,
 		role: role,
 		status: status,
 	};
@@ -114,8 +114,16 @@ const validateApiResponse = (
  * @returns Promise resolving to array of User objects
  * @throws Error if API request fails, times out, or returns invalid data
  */
-const fetchUsersFromApi = async (): Promise<UserType[]> => {
-	const response = await fetch(API_ENDPOINTS.USERS, {
+const fetchUsersFromApi = async (
+	filters: UserFiltersType,
+): Promise<UserType[]> => {
+	const url = new URL(API_ENDPOINTS.USERS);
+
+	if (filters.search) {
+		url.searchParams.append("q", filters.search);
+	}
+
+	const response = await fetch(url.toString(), {
 		signal: AbortSignal.timeout(API_CONFIG.REQUEST_TIMEOUT),
 	});
 
@@ -174,7 +182,7 @@ export const fetchUsers = async (
 	filters: UserFiltersType,
 ): Promise<{ users: UserType[] } | { error: string }> => {
 	try {
-		const users = await fetchUsersFromApi();
+		const users = await fetchUsersFromApi(filters);
 		const filteredUsers = applyFilters(users, filters);
 		return { users: filteredUsers };
 	} catch (error) {
