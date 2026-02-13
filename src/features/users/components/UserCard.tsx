@@ -106,11 +106,8 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 							<dt className="font-medium text-gray-500 text-xs uppercase tracking-wide">
 								Location
 							</dt>
-							<dd
-								className="text-gray-900 font-medium"
-								title={`${user.location.city}, ${user.location.country}`}
-							>
-								{user.location.city}, {user.location.country}
+							<dd className="text-gray-900 font-medium" title={`${user.city}`}>
+								{user.city}
 							</dd>
 						</div>
 					</div>

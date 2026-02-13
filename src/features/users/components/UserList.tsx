@@ -11,9 +11,15 @@ import type { UserGenderType, UserType } from "../types/user.types";
 import { UserCard } from "./UserCard";
 
 export const UserList: React.FC = () => {
-	const [allUsers, setAllUsers] = useState<UserType[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [state, setState] = useState<{
+		data: UserType[];
+		loading: boolean;
+		error: string | null;
+	}>({
+		data: [],
+		loading: false,
+		error: null,
+	});
 
 	const [search, setSearch] = useState<string>("");
 	const [role, setRole] = useState<UserRoleType | "">("");
@@ -21,7 +27,7 @@ export const UserList: React.FC = () => {
 	const [gender, setGender] = useState<UserGenderType | "">("");
 
 	const filteredUsers = useMemo(() => {
-		let filtered = allUsers;
+		let filtered = state.data;
 
 		if (search) {
 			const searchLower = search.toLowerCase();
@@ -46,30 +52,29 @@ export const UserList: React.FC = () => {
 		}
 
 		return filtered;
-	}, [allUsers, search, role, status, gender]);
+	}, [state.data, search, role, status, gender]);
 
 	/**
 	 * Fetches all users data once
 	 * Handles loading states and error conditions
 	 */
 	const fetchAllUsersData = useCallback(async (): Promise<void> => {
-		setLoading(true);
-		setError(null);
+		setState((prev) => ({ ...prev, loading: true, error: null }));
 
 		try {
 			const result = await fetchUsers({});
 
 			if ("error" in result) {
-				setError(result.error);
-				setAllUsers([]);
+				setState({ data: [], loading: false, error: result.error });
 			} else {
-				setAllUsers(result.users);
+				setState({ data: result.users, loading: false, error: null });
 			}
 		} catch (error) {
-			setError(`Failed to fetch users, ${String(error)}`);
-			setAllUsers([]);
-		} finally {
-			setLoading(false);
+			setState({
+				data: [],
+				loading: false,
+				error: `Failed to fetch users, ${String(error)}`,
+			});
 		}
 	}, []);
 
@@ -82,8 +87,9 @@ export const UserList: React.FC = () => {
 	 * @param id - The user ID to toggle status for
 	 */
 	const handleClickToggleStatus = (id: string) => {
-		setAllUsers((prev) =>
-			prev.map((user) =>
+		setState((prev) => ({
+			...prev,
+			data: prev.data.map((user) =>
 				user.id === id
 					? {
 							...user,
@@ -94,7 +100,7 @@ export const UserList: React.FC = () => {
 						}
 					: user,
 			),
-		);
+		}));
 	};
 
 	/**
@@ -253,7 +259,7 @@ export const UserList: React.FC = () => {
 							{filteredUsers.length === 1 ? "user" : "users"} found
 						</p>
 					</div>
-					{!loading && !error && filteredUsers.length > 0 && (
+					{!state.loading && !state.error && filteredUsers.length > 0 && (
 						<div className={resultsStatusClassName}>
 							<span className={statusIndicatorClassName}></span>
 							Updated just now
@@ -261,17 +267,17 @@ export const UserList: React.FC = () => {
 					)}
 				</header>
 
-				{error && (
+				{state.error && (
 					<div role="alert" className={errorAlertClassName}>
 						<span className={errorIconClassName}>⚠️</span>
 						<div>
 							<p className={errorTitleClassName}>Error loading users</p>
-							<p className={errorMessageClassName}>{error}</p>
+							<p className={errorMessageClassName}>{state.error}</p>
 						</div>
 					</div>
 				)}
 
-				{loading && (
+				{state.loading && (
 					<div aria-live="polite" className="text-center py-16">
 						<div className={loadingSpinnerClassName}></div>
 						<p className={loadingTextClassName}>Loading users...</p>
@@ -279,7 +285,7 @@ export const UserList: React.FC = () => {
 					</div>
 				)}
 
-				{!loading && !error && filteredUsers.length === 0 && (
+				{!state.loading && !state.error && filteredUsers.length === 0 && (
 					<div className={emptyStateClassName}>
 						<div className={emptyStateIconClassName}>👤</div>
 						<p className={emptyStateTitleClassName}>No users found</p>
@@ -289,7 +295,7 @@ export const UserList: React.FC = () => {
 					</div>
 				)}
 
-				{!loading && !error && filteredUsers.length > 0 && (
+				{!state.loading && !state.error && filteredUsers.length > 0 && (
 					<div className={usersGridClassName}>
 						{filteredUsers.map((user) => (
 							<UserCard
