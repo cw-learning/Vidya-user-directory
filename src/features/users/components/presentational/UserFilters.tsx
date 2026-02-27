@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useId } from "react";
 
 import { Button } from "../../../../shared/components/Button";
 import { Card } from "../../../../shared/components/Card";
@@ -6,17 +6,20 @@ import { Input } from "../../../../shared/components/Input";
 import { Select } from "../../../../shared/components/Select";
 import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 
-export type SelectOptionType = { value: string; label: string };
+export type SelectOptionType<T extends string = string> = {
+	value: T;
+	label: string;
+};
 
 export type UserFiltersProps = {
 	filters: UserDirectoryFiltersType;
-	roleOptions: SelectOptionType[];
-	statusOptions: SelectOptionType[];
-	genderOptions: SelectOptionType[];
+	roleOptions: SelectOptionType<UserDirectoryFiltersType["role"]>[];
+	statusOptions: SelectOptionType<UserDirectoryFiltersType["status"]>[];
+	genderOptions: SelectOptionType<UserDirectoryFiltersType["gender"]>[];
 	onSearchChange: (value: string) => void;
-	onRoleChange: (value: string) => void;
-	onStatusChange: (value: string) => void;
-	onGenderChange: (value: string) => void;
+	onRoleChange: (value: UserDirectoryFiltersType["role"]) => void;
+	onStatusChange: (value: UserDirectoryFiltersType["status"]) => void;
+	onGenderChange: (value: UserDirectoryFiltersType["gender"]) => void;
 	onClearFilters: () => void;
 };
 
@@ -41,14 +44,18 @@ export const UserFilters = memo(
 		onGenderChange,
 		onClearFilters,
 	}: UserFiltersProps) => {
+		const headingId = useId();
+
 		return (
-			<Card className={filterCardClassName} aria-labelledby="filters-heading">
+			<Card className={filterCardClassName} aria-labelledby={headingId}>
 				<div className="flex items-center gap-4 mb-4">
 					<div className={filterIconContainerClassName}>
-						<span className="text-blue-600 text-xl">🔍</span>
+						<span className="text-blue-600 text-xl" aria-hidden="true">
+							🔍
+						</span>
 					</div>
 					<div>
-						<h3 id="filters-heading" className={filterHeadingClassName}>
+						<h3 id={headingId} className={filterHeadingClassName}>
 							Filter & Search
 						</h3>
 						<p className={filterDescriptionClassName}>
@@ -59,7 +66,7 @@ export const UserFilters = memo(
 
 				<form
 					className={filterFormClassName}
-					onSubmit={(event) => event.preventDefault()}
+					onSubmit={(submitEvent) => submitEvent.preventDefault()}
 				>
 					<div className="lg:col-span-1">
 						<Input

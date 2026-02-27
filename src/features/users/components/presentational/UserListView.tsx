@@ -1,22 +1,21 @@
 import { memo } from "react";
-
-import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 import type { UserType } from "../../types/user.types";
+import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 import type { SelectOptionType } from "./UserFilters";
 import { UserFilters } from "./UserFilters";
 import { UserResults } from "./UserResults";
 
 export type UserListViewProps = {
 	filters: UserDirectoryFiltersType;
-	roleOptions: SelectOptionType[];
-	statusOptions: SelectOptionType[];
-	genderOptions: SelectOptionType[];
+	roleOptions: SelectOptionType<UserDirectoryFiltersType["role"]>[];
+	statusOptions: SelectOptionType<UserDirectoryFiltersType["status"]>[];
+	genderOptions: SelectOptionType<UserDirectoryFiltersType["gender"]>[];
 	users: UserType[];
 	error: string | null;
 	onSearchChange: (value: string) => void;
-	onRoleChange: (value: string) => void;
-	onStatusChange: (value: string) => void;
-	onGenderChange: (value: string) => void;
+	onRoleChange: (value: UserDirectoryFiltersType["role"]) => void;
+	onStatusChange: (value: UserDirectoryFiltersType["status"]) => void;
+	onGenderChange: (value: UserDirectoryFiltersType["gender"]) => void;
 	onClearFilters: () => void;
 	onToggleStatus: (id: string) => void;
 };
@@ -39,10 +38,7 @@ export const UserListView = memo(
 		onToggleStatus,
 	}: UserListViewProps) => {
 		return (
-			<section
-				className={userListSectionClassName}
-				aria-labelledby="user-list-heading"
-			>
+			<section className={userListSectionClassName} aria-label="User directory">
 				<UserFilters
 					filters={filters}
 					roleOptions={roleOptions}

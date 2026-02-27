@@ -12,8 +12,9 @@ import { getRoleOptions } from "../../../../constants/userRoles";
 import { USER_STATUS } from "../../../../constants/userStatus";
 import { ErrorFallback } from "../../../../shared/components/ErrorFallback";
 import { fetchUsers } from "../../services/userService";
-import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 import type { UserType } from "../../types/user.types";
+import { UserGenderType } from "../../types/user.types";
+import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
@@ -85,8 +86,11 @@ const UserListContent: FC = () => {
 		return filtered;
 	}, [users, filters]);
 
-	const handleSearchChange = useCallback((value: string) => {
-		setFilters((previousFilters) => ({ ...previousFilters, search: value }));
+	const handleSearchChange = useCallback((searchText: string) => {
+		setFilters((previousFilters) => ({
+			...previousFilters,
+			search: searchText,
+		}));
 	}, []);
 
 	const handleRoleChange = useCallback(
@@ -123,37 +127,30 @@ const UserListContent: FC = () => {
 		setFilters(initialFilters);
 	}, []);
 
-	const handleToggleUserStatus = useCallback(
-		async (id: string) => {
-			try {
-				setUsers((currentUsers) =>
-					currentUsers.map((user) =>
-						user.id === id
-							? {
-									...user,
-									status:
-										user.status === USER_STATUS.ACTIVE
-											? USER_STATUS.INACTIVE
-											: USER_STATUS.ACTIVE,
-								}
-							: user,
-					),
-				);
-			} catch (toggleError) {
-				showBoundary(toggleError);
-			}
-		},
-		[showBoundary],
-	);
+	const handleToggleUserStatus = useCallback((userId: string) => {
+		setUsers((currentUsers) =>
+			currentUsers.map((user) =>
+				user.id === userId
+					? {
+							...user,
+							status:
+								user.status === USER_STATUS.ACTIVE
+									? USER_STATUS.INACTIVE
+									: USER_STATUS.ACTIVE,
+						}
+					: user,
+			),
+		);
+	}, []);
 
 	const roleOptions = useMemo(
-		() => [{ value: "", label: "All Roles" }, ...getRoleOptions()],
+		() => [{ value: "" as const, label: "All Roles" }, ...getRoleOptions()],
 		[],
 	);
 
 	const statusOptions = useMemo(
 		() => [
-			{ value: "", label: "All Statuses" },
+			{ value: "" as const, label: "All Statuses" },
 			{ value: USER_STATUS.ACTIVE, label: "Active" },
 			{ value: USER_STATUS.INACTIVE, label: "Inactive" },
 			{ value: USER_STATUS.PENDING, label: "Pending" },
@@ -163,9 +160,9 @@ const UserListContent: FC = () => {
 
 	const genderOptions = useMemo(
 		() => [
-			{ value: "", label: "All Genders" },
-			{ value: "male", label: "Male" },
-			{ value: "female", label: "Female" },
+			{ value: "" as const, label: "All Genders" },
+			{ value: UserGenderType.MALE, label: "Male" },
+			{ value: UserGenderType.FEMALE, label: "Female" },
 		],
 		[],
 	);

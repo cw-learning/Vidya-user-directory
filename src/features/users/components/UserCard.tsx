@@ -65,7 +65,7 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 		"absolute inset-0 bg-linear-to-br from-blue-50/0 to-purple-50/0 group-hover:from-blue-50/20 group-hover:to-purple-50/20 transition-all duration-300 pointer-events-none rounded-2xl";
 
 	return (
-		<Card className={cardClassName} role="article" aria-label={cardAriaLabel}>
+		<Card as="article" className={cardClassName} aria-label={cardAriaLabel}>
 			<div className="absolute top-4 right-4 z-10">
 				<div className={statusBadgeClassName}>
 					<span className="text-sm">{getStatusIcon(user.status)}</span>

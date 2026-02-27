@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
-import { UserListSuspenseContainer } from "./container/UserListSuspenseContainer";
+import { UserListContainer } from "./container/UserListContainer";
 
 export const UserList = (): ReactElement => {
-	return <UserListSuspenseContainer />;
+	return <UserListContainer />;
 };

@@ -1,29 +1,29 @@
-import type { ChangeEvent, FC } from "react";
+import type { ChangeEvent } from "react";
 import { useId } from "react";
 
-export interface SelectProps {
+export interface SelectProps<T extends string = string> {
 	label: string;
-	value: string;
-	onChange: (value: string) => void;
-	options: { value: string; label: string }[];
+	value: T;
+	onChange: (value: T) => void;
+	options: { value: T; label: string }[];
 	id?: string;
 	error?: string;
 }
 
-export const Select: FC<SelectProps> = ({
+export const Select = <T extends string = string>({
 	label,
 	value,
 	onChange,
 	options,
 	id,
 	error,
-}) => {
+}: SelectProps<T>) => {
 	const generatedId = useId();
 	const selectId = id ?? generatedId;
 	const errorId = `${selectId}-error`;
 
 	const handleOnChangeSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-		onChange(event.target.value);
+		onChange(event.target.value as T);
 	};
 
 	return (

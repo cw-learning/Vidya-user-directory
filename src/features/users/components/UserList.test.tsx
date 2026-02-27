@@ -64,7 +64,11 @@ describe("UserList Component", () => {
 		await waitFor(() => {
 			const errorAlert = screen.getByRole("alert");
 			expect(errorAlert).toBeInTheDocument();
-			expect(within(errorAlert).getByText(errorMessage)).toBeInTheDocument();
+			expect(
+				within(errorAlert).getByText(
+					/unable to load users\. please try again later\./i,
+				),
+			).toBeInTheDocument();
 		});
 	});
 

@@ -1,16 +1,24 @@
 import clsx from "clsx";
-import type { ComponentPropsWithoutRef, FC, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 
-export interface CardProps extends ComponentPropsWithoutRef<"div"> {
+export type CardProps<T extends ElementType = "div"> = {
+	as?: T;
 	children: ReactNode;
-}
+	className?: string;
+} & Omit<ComponentPropsWithoutRef<T>, "as" | "children" | "className">;
 
 const baseClassName = "bg-white rounded-2xl border border-gray-200 shadow-sm";
 
-export const Card: FC<CardProps> = ({ children, className, ...props }) => {
+export const Card = <T extends ElementType = "div">({
+	as,
+	children,
+	className,
+	...props
+}: CardProps<T>) => {
+	const Component = as ?? "div";
 	return (
-		<div className={clsx(baseClassName, className)} {...props}>
+		<Component className={clsx(baseClassName, className)} {...props}>
 			{children}
-		</div>
+		</Component>
 	);
 };

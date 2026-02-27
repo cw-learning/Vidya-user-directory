@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useId } from "react";
 
 import type { UserType } from "../../types/user.types";
 import { UserCard } from "../UserCard";
@@ -25,11 +25,13 @@ const userGridClassName =
 
 export const UserResults = memo(
 	({ users, error, onToggleStatus }: UserResultsProps) => {
+		const headingId = useId();
+
 		return (
-			<section aria-labelledby="results-heading">
+			<section aria-labelledby={headingId}>
 				<header className="flex justify-between items-center mb-4">
 					<div>
-						<h3 id="results-heading" className={resultsHeadingClassName}>
+						<h3 id={headingId} className={resultsHeadingClassName}>
 							Users
 						</h3>
 						<p className={resultsCountClassName}>
@@ -46,10 +48,14 @@ export const UserResults = memo(
 
 				{error && (
 					<div role="alert" className={errorAlertClassName}>
-						<span className="text-red-500 text-xl">⚠️</span>
+						<span className="text-red-500 text-xl" aria-hidden="true">
+							⚠️
+						</span>
 						<div>
 							<p className="font-semibold">Error loading users</p>
-							<p className="text-sm">{error}</p>
+							<p className="text-sm">
+								Unable to load users. Please try again later.
+							</p>
 						</div>
 					</div>
 				)}

@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useState } from "react";
 import type { FallbackProps } from "react-error-boundary";
 
 import { Button } from "./Button";
@@ -7,6 +8,7 @@ import { Card } from "./Card";
 export interface ErrorFallbackProps extends FallbackProps {
 	title?: string;
 	description?: string;
+	showDetails?: boolean;
 }
 
 const errorCardClassName = "bg-red-50/80 border-red-200 p-6";
@@ -26,21 +28,35 @@ const getErrorMessage = (error: unknown): string => {
 	return "Unknown error";
 };
 
+const detailsSummaryClassName =
+	"cursor-pointer text-sm text-red-600 font-medium hover:text-red-800 transition-colors";
+
 export const ErrorFallback: FC<ErrorFallbackProps> = ({
 	error,
 	resetErrorBoundary,
 	title = "Something went wrong",
 	description = "A runtime error occurred in this section. Click retry to recover.",
+	showDetails = false,
 }) => {
 	const errorMessage = getErrorMessage(error);
+	const [isDetailsOpen, setIsDetailsOpen] = useState(showDetails);
 
 	return (
 		<Card className={errorCardClassName} role="alert">
 			<h2 className={errorTitleClassName}>{title}</h2>
 			<p className={errorDescriptionClassName}>{description}</p>
-			{errorMessage && (
+			<details
+				open={isDetailsOpen}
+				onToggle={(toggleEvent) =>
+					setIsDetailsOpen((toggleEvent.target as HTMLDetailsElement).open)
+				}
+				className="mb-4"
+			>
+				<summary className={detailsSummaryClassName}>
+					Show error details
+				</summary>
 				<pre className={errorMessageClassName}>{errorMessage}</pre>
-			)}
+			</details>
 			<Button
 				onClick={resetErrorBoundary}
 				variant="secondary"
