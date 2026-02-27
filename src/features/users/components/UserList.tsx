@@ -1,7 +1,7 @@
-import type { FC } from "react";
+import type { ReactElement } from "react";
 
-import { UserListContainer } from "./container/UserListContainer";
+import { UserListSuspenseContainer } from "./container/UserListSuspenseContainer";
 
-export const UserList: FC = () => {
-	return <UserListContainer />;
+export const UserList = (): ReactElement => {
+	return <UserListSuspenseContainer />;
 };

@@ -4,11 +4,11 @@ import { Button } from "../../../../shared/components/Button";
 import { Card } from "../../../../shared/components/Card";
 import { Input } from "../../../../shared/components/Input";
 import { Select } from "../../../../shared/components/Select";
-import type { UserDirectoryFiltersType } from "../../hooks/useUserDirectory";
+import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 
-type SelectOptionType = { value: string; label: string };
+export type SelectOptionType = { value: string; label: string };
 
-interface UserFiltersProps {
+export type UserFiltersProps = {
 	filters: UserDirectoryFiltersType;
 	roleOptions: SelectOptionType[];
 	statusOptions: SelectOptionType[];
@@ -18,7 +18,16 @@ interface UserFiltersProps {
 	onStatusChange: (value: string) => void;
 	onGenderChange: (value: string) => void;
 	onClearFilters: () => void;
-}
+};
+
+const filterCardClassName = "bg-white/75 p-8 border border-blue-100 mb-8";
+const filterIconContainerClassName = "p-4 bg-blue-100 rounded-lg";
+const filterHeadingClassName = "text-xl font-semibold text-gray-800";
+const filterDescriptionClassName = "text-sm text-gray-600";
+const filterFormClassName =
+	"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4";
+const clearButtonClassName =
+	"px-4 py-4 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200";
 
 export const UserFilters = memo(
 	({
@@ -33,26 +42,23 @@ export const UserFilters = memo(
 		onClearFilters,
 	}: UserFiltersProps) => {
 		return (
-			<Card
-				className="bg-white/75 p-8 border border-blue-100 mb-8"
-				aria-labelledby="filters-heading"
-			>
+			<Card className={filterCardClassName} aria-labelledby="filters-heading">
 				<div className="flex items-center gap-4 mb-4">
-					<div className="p-4 bg-blue-100 rounded-lg">
+					<div className={filterIconContainerClassName}>
 						<span className="text-blue-600 text-xl">🔍</span>
 					</div>
 					<div>
-						<h3 id="filters-heading" className="text-xl font-semibold text-gray-800">
+						<h3 id="filters-heading" className={filterHeadingClassName}>
 							Filter & Search
 						</h3>
-						<p className="text-sm text-gray-600">
+						<p className={filterDescriptionClassName}>
 							Find users by name, role, status, or gender
 						</p>
 					</div>
 				</div>
 
 				<form
-					className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4"
+					className={filterFormClassName}
 					onSubmit={(event) => event.preventDefault()}
 				>
 					<div className="lg:col-span-1">
@@ -96,13 +102,12 @@ export const UserFilters = memo(
 						<Button
 							onClick={onClearFilters}
 							variant="secondary"
-							className="px-4 py-4 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+							className={clearButtonClassName}
 						>
 							Clear Filters
 						</Button>
 					</div>
 				</form>
-
 			</Card>
 		);
 	},

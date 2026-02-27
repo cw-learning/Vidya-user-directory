@@ -1,19 +1,17 @@
 import { memo } from "react";
 
-import type { UserDirectoryFiltersType } from "../../hooks/useUserDirectory";
+import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 import type { UserType } from "../../types/user.types";
+import type { SelectOptionType } from "./UserFilters";
 import { UserFilters } from "./UserFilters";
 import { UserResults } from "./UserResults";
 
-type SelectOptionType = { value: string; label: string };
-
-interface UserListViewProps {
+export type UserListViewProps = {
 	filters: UserDirectoryFiltersType;
 	roleOptions: SelectOptionType[];
 	statusOptions: SelectOptionType[];
 	genderOptions: SelectOptionType[];
 	users: UserType[];
-	loading: boolean;
 	error: string | null;
 	onSearchChange: (value: string) => void;
 	onRoleChange: (value: string) => void;
@@ -21,7 +19,9 @@ interface UserListViewProps {
 	onGenderChange: (value: string) => void;
 	onClearFilters: () => void;
 	onToggleStatus: (id: string) => void;
-}
+};
+
+const userListSectionClassName = "max-w-7xl mx-auto";
 
 export const UserListView = memo(
 	({
@@ -30,7 +30,6 @@ export const UserListView = memo(
 		statusOptions,
 		genderOptions,
 		users,
-		loading,
 		error,
 		onSearchChange,
 		onRoleChange,
@@ -41,7 +40,7 @@ export const UserListView = memo(
 	}: UserListViewProps) => {
 		return (
 			<section
-				className="max-w-7xl mx-auto"
+				className={userListSectionClassName}
 				aria-labelledby="user-list-heading"
 			>
 				<UserFilters
@@ -57,7 +56,6 @@ export const UserListView = memo(
 				/>
 				<UserResults
 					users={users}
-					loading={loading}
 					error={error}
 					onToggleStatus={onToggleStatus}
 				/>
