@@ -1,7 +1,8 @@
-import type { FC } from "react";
+import { memo, useCallback } from "react";
 
 import { USER_STATUS } from "../../../constants/userStatus";
 import { Button } from "../../../shared/components/Button";
+import { Card } from "../../../shared/components/Card";
 import type { UserType } from "../types/user.types";
 
 interface UserCardProps {
@@ -9,8 +10,10 @@ interface UserCardProps {
 	onToggleStatus: (id: string) => void;
 }
 
-export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
-	const handleClickToggleStatus = () => onToggleStatus(user.id);
+export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
+	const handleClickToggleStatus = useCallback(() => {
+		onToggleStatus(user.id);
+	}, [onToggleStatus, user.id]);
 
 	const fullName = `${user.name.first} ${user.name.last}`;
 	const cardAriaLabel = `User ${fullName}, role ${user.role}, status ${user.status}, email ${user.email}`;
@@ -62,7 +65,7 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 		"absolute inset-0 bg-linear-to-br from-blue-50/0 to-purple-50/0 group-hover:from-blue-50/20 group-hover:to-purple-50/20 transition-all duration-300 pointer-events-none rounded-2xl";
 
 	return (
-		<article className={cardClassName} aria-label={cardAriaLabel}>
+		<Card as="article" className={cardClassName} aria-label={cardAriaLabel}>
 			<div className="absolute top-4 right-4 z-10">
 				<div className={statusBadgeClassName}>
 					<span className="text-sm">{getStatusIcon(user.status)}</span>
@@ -127,6 +130,8 @@ export const UserCard: FC<UserCardProps> = ({ user, onToggleStatus }) => {
 			</footer>
 
 			<div className={overlayClassName}></div>
-		</article>
+		</Card>
 	);
-};
+});
+
+UserCard.displayName = "UserCard";
