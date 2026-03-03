@@ -45,18 +45,20 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
 		<Card className={errorCardClassName} role="alert">
 			<h2 className={errorTitleClassName}>{title}</h2>
 			<p className={errorDescriptionClassName}>{description}</p>
-			<details
-				open={isDetailsOpen}
-				onToggle={(toggleEvent) =>
-					setIsDetailsOpen((toggleEvent.target as HTMLDetailsElement).open)
-				}
-				className="mb-4"
-			>
-				<summary className={detailsSummaryClassName}>
-					Show error details
-				</summary>
-				<pre className={errorMessageClassName}>{errorMessage}</pre>
-			</details>
+			{showDetails && (
+				<details
+					open={isDetailsOpen}
+					onToggle={(toggleEvent) =>
+						setIsDetailsOpen(toggleEvent.currentTarget.open)
+					}
+					className="mb-4"
+				>
+					<summary className={detailsSummaryClassName}>
+						Show error details
+					</summary>
+					<pre className={errorMessageClassName}>{errorMessage}</pre>
+				</details>
+			)}
 			<Button
 				onClick={resetErrorBoundary}
 				variant="secondary"

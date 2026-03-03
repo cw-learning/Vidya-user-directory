@@ -23,7 +23,13 @@ export const Select = <T extends string = string>({
 	const errorId = `${selectId}-error`;
 
 	const handleOnChangeSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-		onChange(event.target.value as T);
+		const nextOption = options.find(
+			(option) => option.value === event.currentTarget.value,
+		);
+
+		if (nextOption) {
+			onChange(nextOption.value);
+		}
 	};
 
 	return (

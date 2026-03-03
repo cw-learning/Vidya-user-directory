@@ -32,7 +32,7 @@ describe("App error boundary integration", () => {
 
 		const errorAlert = await screen.findByRole("alert");
 		expect(errorAlert).toBeInTheDocument();
-		expect(screen.getByText(/network failure/i)).toBeInTheDocument();
+		expect(screen.getByText(/runtime error occurred/i)).toBeInTheDocument();
 	});
 
 	it("recovers when retry button is clicked after fetch error", async () => {

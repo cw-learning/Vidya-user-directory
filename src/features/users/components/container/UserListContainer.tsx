@@ -189,9 +189,9 @@ const UserListContent: FC = () => {
 	);
 };
 
-const handleBoundaryError = (error: unknown, info: ErrorInfo) => {
+const handleBoundaryError = (error: unknown, errorInfo: ErrorInfo) => {
 	console.error("[ErrorBoundary] Caught error:", error);
-	console.error("[ErrorBoundary] Component stack:", info.componentStack);
+	console.error("[ErrorBoundary] Component stack:", errorInfo.componentStack);
 };
 
 export const UserListContainer: FC = () => {
