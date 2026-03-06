@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_ROLES } from "../../../constants/userRoles";
 import { USER_STATUS } from "../../../constants/userStatus";
 import { fetchUsers } from "../services/userService";
+import { resetUserStore } from "../hooks/useUserStore";
 import { UserGenderType } from "../types/user.types";
 import { UserList } from "./UserList";
 
@@ -37,6 +38,7 @@ const mockUsers = [
 describe("UserList Component", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		resetUserStore();
 		user = userEvent.setup();
 	});
 

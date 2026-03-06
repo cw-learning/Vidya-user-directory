@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { USER_ROLES } from "./constants/userRoles";
 import { USER_STATUS } from "./constants/userStatus";
+import { resetUserStore } from "./features/users/hooks/useUserStore";
 import { fetchUsers } from "./features/users/services/userService";
 import { UserGenderType } from "./features/users/types/user.types";
 
@@ -18,6 +19,7 @@ const renderApp = () => {
 describe("App error boundary integration", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		resetUserStore();
 		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
