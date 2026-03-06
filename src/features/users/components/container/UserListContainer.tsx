@@ -6,7 +6,8 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
+import { useShallow } from "zustand/react/shallow";
 
 import { getRoleOptions } from "../../../../constants/userRoles";
 import { USER_STATUS } from "../../../../constants/userStatus";
@@ -17,23 +18,37 @@ import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
 const UserListContent: FC = () => {
-	const { showBoundary } = useErrorBoundary();
-
-	const users = useUserStore((state) => state.users);
-	const loading = useUserStore((state) => state.loading);
-	const error = useUserStore((state) => state.error);
-	const filters = useUserStore((state) => state.filters);
-	const loadUsers = useUserStore((state) => state.loadUsers);
-	const setSearch = useUserStore((state) => state.setSearch);
-	const setRole = useUserStore((state) => state.setRole);
-	const setStatus = useUserStore((state) => state.setStatus);
-	const setGender = useUserStore((state) => state.setGender);
-	const clearFilters = useUserStore((state) => state.clearFilters);
-	const toggleUserStatus = useUserStore((state) => state.toggleUserStatus);
+	const {
+		users,
+		loading,
+		error,
+		filters,
+		loadUsers,
+		setSearch,
+		setRole,
+		setStatus,
+		setGender,
+		clearFilters,
+		toggleUserStatus,
+	} = useUserStore(
+		useShallow((state) => ({
+			users: state.users,
+			loading: state.loading,
+			error: state.error,
+			filters: state.filters,
+			loadUsers: state.loadUsers,
+			setSearch: state.setSearch,
+			setRole: state.setRole,
+			setStatus: state.setStatus,
+			setGender: state.setGender,
+			clearFilters: state.clearFilters,
+			toggleUserStatus: state.toggleUserStatus,
+		})),
+	);
 
 	useEffect(() => {
-		loadUsers().catch(showBoundary);
-	}, [loadUsers, showBoundary]);
+		loadUsers();
+	}, [loadUsers]);
 	const roleOptions = useMemo(
 		() => [{ value: "" as const, label: "All Roles" }, ...getRoleOptions()],
 		[],

@@ -95,6 +95,8 @@ export const useUserStore = create<UserStore>()(
                         "users/load/success",
                     );
                 }
+            } catch (e) {
+                set({ users: [], error: e instanceof Error ? e.message : String(e) }, false, "users/load/exception");
             } finally {
                 set({ loading: false }, false, "users/load/finish");
             }
