@@ -1,9 +1,12 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_ROLES } from "../../../constants/userRoles";
 import { USER_STATUS } from "../../../constants/userStatus";
+import { store } from "../../../store/store";
 import { fetchUsers } from "../services/userService";
+import { resetUsersState } from "../store/userSlice";
 import { UserGenderType } from "../types/user.types";
 import { UserList } from "./UserList";
 
@@ -12,6 +15,14 @@ vi.mock("../services/userService", () => ({
 }));
 
 let user: ReturnType<typeof userEvent.setup>;
+
+const renderUserList = () => {
+	return render(
+		<Provider store={store}>
+			<UserList />
+		</Provider>,
+	);
+};
 
 const mockUsers = [
 	{
@@ -37,19 +48,20 @@ const mockUsers = [
 describe("UserList Component", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		store.dispatch(resetUsersState());
 		user = userEvent.setup();
 	});
 
 	it("should show the loading spinner when the component first mounts", () => {
 		vi.mocked(fetchUsers).mockReturnValue(new Promise(() => {}));
-		render(<UserList />);
+		renderUserList();
 		expect(screen.getByText(/loading users.../i)).toBeInTheDocument();
 		expect(screen.queryByText(/david george/i)).not.toBeInTheDocument();
 	});
 
 	it("should display the list of users after a successful fetch", async () => {
 		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
-		render(<UserList />);
+		renderUserList();
 		await waitFor(() => {
 			expect(screen.getByText(/david george/i)).toBeInTheDocument();
 			expect(screen.getByText(/sara nate/i)).toBeInTheDocument();
@@ -60,7 +72,7 @@ describe("UserList Component", () => {
 	it("should display the error alert when the service fails", async () => {
 		const errorMessage = "API is currently down";
 		vi.mocked(fetchUsers).mockResolvedValue({ error: errorMessage });
-		render(<UserList />);
+		renderUserList();
 		await waitFor(() => {
 			const errorAlert = screen.getByRole("alert");
 			expect(errorAlert).toBeInTheDocument();
@@ -74,7 +86,7 @@ describe("UserList Component", () => {
 
 	it("should show the empty state when no users match the filter", async () => {
 		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
-		render(<UserList />);
+		renderUserList();
 		const searchInput = await screen.findByLabelText(/search users/i);
 		await user.type(searchInput, "NonExistentUser");
 		expect(screen.getByText(/no users found/i)).toBeInTheDocument();
@@ -83,7 +95,7 @@ describe("UserList Component", () => {
 
 	it("should clear filters and reset the list when 'Clear Filters' is clicked", async () => {
 		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
-		render(<UserList />);
+		renderUserList();
 		const searchInput = await screen.findByLabelText(/search users/i);
 		await user.type(searchInput, "David");
 		expect(screen.queryByText(/sara nate/i)).not.toBeInTheDocument();
@@ -95,7 +107,7 @@ describe("UserList Component", () => {
 
 	it("should update a user card's status locally when the toggle button is clicked", async () => {
 		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
-		render(<UserList />);
+		renderUserList();
 		const davidCard = await screen.findByLabelText(/User David George/i);
 		const deactivateBtn = within(davidCard).getByRole("button", {
 			name: /deactivate/i,
