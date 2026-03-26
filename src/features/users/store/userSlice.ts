@@ -21,6 +21,7 @@ export type UsersState = {
 	users: UserType[];
 	loading: boolean;
 	error: string | null;
+	currentRequestId: string | null;
 	filters: UserDirectoryFiltersType;
 };
 
@@ -28,6 +29,7 @@ const createInitialState = (): UsersState => ({
 	users: [],
 	loading: true,
 	error: null,
+	currentRequestId: null,
 	filters: getInitialFilters(),
 });
 
@@ -65,16 +67,23 @@ export const filterUsers = (
 export const loadUsers = createAsyncThunk<
 	UserType[],
 	void,
-	{ rejectValue: string }
->("users/load", async (_, { rejectWithValue }) => {
-	const result = await fetchUsers({});
+	{ state: RootState; rejectValue: string }
+>(
+	"users/load",
+	async (_, { rejectWithValue }) => {
+		const result = await fetchUsers({});
 
-	if ("error" in result) {
-		return rejectWithValue(result.error);
-	}
+		if ("error" in result) {
+			return rejectWithValue(result.error);
+		}
 
-	return result.users;
-});
+		return result.users;
+	},
+	{
+		condition: (_, { getState }) =>
+			getState().users.currentRequestId === null,
+	},
+);
 
 const usersSlice = createSlice({
 	name: "users",
@@ -104,7 +113,7 @@ const usersSlice = createSlice({
 		clearFilters: (state) => {
 			state.filters = getInitialFilters();
 		},
-		toggleUserStatus: (state, action: PayloadAction<string>) => {
+		toggleUserStatus: (state, action: PayloadAction<UserType["id"]>) => {
 			state.users = state.users.map((user) =>
 				user.id === action.payload
 					? {
@@ -121,18 +130,33 @@ const usersSlice = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder
-			.addCase(loadUsers.pending, (state) => {
+			.addCase(loadUsers.pending, (state, action) => {
+				if (state.currentRequestId !== null) {
+					return;
+				}
+
 				state.loading = true;
 				state.error = null;
+				state.currentRequestId = action.meta.requestId;
 			})
 			.addCase(loadUsers.fulfilled, (state, action) => {
+				if (state.currentRequestId !== action.meta.requestId) {
+					return;
+				}
+
 				state.users = action.payload;
 				state.error = null;
 				state.loading = false;
+				state.currentRequestId = null;
 			})
 			.addCase(loadUsers.rejected, (state, action) => {
+				if (state.currentRequestId !== action.meta.requestId) {
+					return;
+				}
+
 				state.users = [];
 				state.loading = false;
+				state.currentRequestId = null;
 				state.error =
 					action.payload ?? action.error.message ?? "Failed to load users";
 			});

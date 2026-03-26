@@ -1,12 +1,12 @@
+import { StrictMode } from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_ROLES } from "../../../constants/userRoles";
 import { USER_STATUS } from "../../../constants/userStatus";
-import { store } from "../../../store/store";
+import { createAppStore, type AppStore } from "../../../store/store";
 import { fetchUsers } from "../services/userService";
-import { resetUsersState } from "../store/userSlice";
 import { UserGenderType } from "../types/user.types";
 import { UserList } from "./UserList";
 
@@ -15,12 +15,17 @@ vi.mock("../services/userService", () => ({
 }));
 
 let user: ReturnType<typeof userEvent.setup>;
+let store: AppStore;
 
-const renderUserList = () => {
-	return render(
+const renderUserList = ({ strictMode = false }: { strictMode?: boolean } = {}) => {
+	const content = (
 		<Provider store={store}>
 			<UserList />
-		</Provider>,
+		</Provider>
+	);
+
+	return render(
+		strictMode ? <StrictMode>{content}</StrictMode> : content,
 	);
 };
 
@@ -48,7 +53,7 @@ const mockUsers = [
 describe("UserList Component", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		store.dispatch(resetUsersState());
+		store = createAppStore();
 		user = userEvent.setup();
 	});
 
@@ -116,5 +121,13 @@ describe("UserList Component", () => {
 		expect(
 			within(davidCard).getByRole("button", { name: /activate/i }),
 		).toBeInTheDocument();
+	});
+
+	it("should ignore the strict mode duplicate load dispatch", async () => {
+		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		renderUserList({ strictMode: true });
+		await screen.findByText(/david george/i);
+		expect(fetchUsers).toHaveBeenCalledTimes(1);
+		expect(screen.queryByText(/runtime error occurred/i)).not.toBeInTheDocument();
 	});
 });

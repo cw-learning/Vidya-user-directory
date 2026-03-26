@@ -25,7 +25,8 @@ import {
 	setStatus,
 	toggleUserStatus,
 } from "../../store/userSlice";
-import { UserGenderType } from "../../types/user.types";
+import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
+import { UserGenderType, type UserType } from "../../types/user.types";
 import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
@@ -39,11 +40,19 @@ const UserListContent: FC = () => {
 	const filters = useAppSelector(selectFilters);
 
 	useEffect(() => {
+		let isMounted = true;
+
 		const loadData = async () => {
 			const resultAction = await dispatch(loadUsers());
 
+			if (!isMounted) {
+				return;
+			}
+
 			if (
 				loadUsers.rejected.match(resultAction) &&
+				!resultAction.meta.condition &&
+				!resultAction.meta.aborted &&
 				resultAction.payload === undefined
 			) {
 				showBoundary(resultAction.error);
@@ -51,6 +60,10 @@ const UserListContent: FC = () => {
 		};
 
 		void loadData();
+
+		return () => {
+			isMounted = false;
+		};
 	}, [dispatch, showBoundary]);
 
 	const handleSearchChange = useCallback(
@@ -61,21 +74,21 @@ const UserListContent: FC = () => {
 	);
 
 	const handleRoleChange = useCallback(
-		(nextRole: (typeof filters)["role"]) => {
+		(nextRole: UserDirectoryFiltersType["role"]) => {
 			dispatch(setRole(nextRole));
 		},
 		[dispatch],
 	);
 
 	const handleStatusChange = useCallback(
-		(nextStatus: (typeof filters)["status"]) => {
+		(nextStatus: UserDirectoryFiltersType["status"]) => {
 			dispatch(setStatus(nextStatus));
 		},
 		[dispatch],
 	);
 
 	const handleGenderChange = useCallback(
-		(nextGender: (typeof filters)["gender"]) => {
+		(nextGender: UserDirectoryFiltersType["gender"]) => {
 			dispatch(setGender(nextGender));
 		},
 		[dispatch],
@@ -86,7 +99,7 @@ const UserListContent: FC = () => {
 	}, [dispatch]);
 
 	const handleToggleUserStatus = useCallback(
-		(userId: string) => {
+		(userId: UserType["id"]) => {
 			dispatch(toggleUserStatus(userId));
 		},
 		[dispatch],

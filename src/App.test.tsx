@@ -6,13 +6,14 @@ import App from "./App";
 import { USER_ROLES } from "./constants/userRoles";
 import { USER_STATUS } from "./constants/userStatus";
 import { fetchUsers } from "./features/users/services/userService";
-import { resetUsersState } from "./features/users/store/userSlice";
 import { UserGenderType } from "./features/users/types/user.types";
-import { store } from "./store/store";
+import { createAppStore, type AppStore } from "./store/store";
 
 vi.mock("./features/users/services/userService", () => ({
 	fetchUsers: vi.fn(),
 }));
+
+let store: AppStore;
 
 const renderApp = () => {
 	return render(
@@ -25,7 +26,7 @@ const renderApp = () => {
 describe("App error boundary integration", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		store.dispatch(resetUsersState());
+		store = createAppStore();
 		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
