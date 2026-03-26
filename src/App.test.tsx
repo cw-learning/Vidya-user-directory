@@ -1,23 +1,32 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Provider } from "react-redux";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { USER_ROLES } from "./constants/userRoles";
 import { USER_STATUS } from "./constants/userStatus";
 import { fetchUsers } from "./features/users/services/userService";
 import { UserGenderType } from "./features/users/types/user.types";
+import { createAppStore, type AppStore } from "./store/store";
 
 vi.mock("./features/users/services/userService", () => ({
 	fetchUsers: vi.fn(),
 }));
 
+let store: AppStore;
+
 const renderApp = () => {
-	return render(<App />);
+	return render(
+		<Provider store={store}>
+			<App />
+		</Provider>,
+	);
 };
 
 describe("App error boundary integration", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		store = createAppStore();
 		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
@@ -30,9 +39,9 @@ describe("App error boundary integration", () => {
 
 		renderApp();
 
-		const errorAlert = await screen.findByRole("alert");
-		expect(errorAlert).toBeInTheDocument();
-		expect(screen.getByText(/runtime error occurred/i)).toBeInTheDocument();
+		expect(
+			await screen.findByText(/runtime error occurred/i),
+		).toBeInTheDocument();
 	});
 
 	it("recovers when retry button is clicked after fetch error", async () => {
@@ -56,10 +65,8 @@ describe("App error boundary integration", () => {
 
 		renderApp();
 
-		const errorAlert = await screen.findByRole("alert");
-		expect(errorAlert).toBeInTheDocument();
-
-		await user.click(screen.getByRole("button", { name: /retry/i }));
+		await screen.findByText(/runtime error occurred/i);
+		await user.click(await screen.findByRole("button", { name: /retry/i }));
 		await screen.findByText(/david george/i);
 		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 	});

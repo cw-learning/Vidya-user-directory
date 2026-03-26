@@ -11,137 +11,99 @@ import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
 import { getRoleOptions } from "../../../../constants/userRoles";
 import { USER_STATUS } from "../../../../constants/userStatus";
 import { ErrorFallback } from "../../../../shared/components/ErrorFallback";
-import { fetchUsers } from "../../services/userService";
-import type { UserType } from "../../types/user.types";
-import { UserGenderType } from "../../types/user.types";
+import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
+import {
+	clearFilters,
+	loadUsers,
+	selectError,
+	selectFilteredUsers,
+	selectFilters,
+	selectLoading,
+	setGender,
+	setRole,
+	setSearch,
+	setStatus,
+	toggleUserStatus,
+} from "../../store/userSlice";
 import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
+import { UserGenderType, type UserType } from "../../types/user.types";
 import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
-const initialFilters: UserDirectoryFiltersType = {
-	search: "",
-	role: "",
-	status: "",
-	gender: "",
-};
-
 const UserListContent: FC = () => {
 	const { showBoundary } = useErrorBoundary();
+	const dispatch = useAppDispatch();
 
-	const [users, setUsers] = useState<UserType[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string | null>(null);
-	const [filters, setFilters] =
-		useState<UserDirectoryFiltersType>(initialFilters);
+	const users = useAppSelector(selectFilteredUsers);
+	const loading = useAppSelector(selectLoading);
+	const error = useAppSelector(selectError);
+	const filters = useAppSelector(selectFilters);
 
 	useEffect(() => {
-		const loadUsers = async () => {
-			setLoading(true);
-			setError(null);
+		let isMounted = true;
 
-			try {
-				const result = await fetchUsers({});
+		const loadData = async () => {
+			const resultAction = await dispatch(loadUsers());
 
-				if ("error" in result) {
-					setUsers([]);
-					setError(result.error);
-				} else {
-					setUsers(result.users);
-				}
-			} catch (fetchError) {
-				showBoundary(fetchError);
-			} finally {
-				setLoading(false);
+			if (!isMounted) {
+				return;
+			}
+
+			if (
+				loadUsers.rejected.match(resultAction) &&
+				!resultAction.meta.condition &&
+				!resultAction.meta.aborted &&
+				resultAction.payload === undefined
+			) {
+				showBoundary(resultAction.error);
 			}
 		};
 
-		loadUsers();
-	}, [showBoundary]);
+		void loadData();
 
-	const filteredUsers = useMemo(() => {
-		let filtered = users;
+		return () => {
+			isMounted = false;
+		};
+	}, [dispatch, showBoundary]);
 
-		if (filters.search) {
-			const searchLower = filters.search.toLowerCase();
-			filtered = filtered.filter(
-				(user) =>
-					user.name.first.toLowerCase().includes(searchLower) ||
-					user.name.last.toLowerCase().includes(searchLower) ||
-					user.email.toLowerCase().includes(searchLower),
-			);
-		}
-
-		if (filters.role) {
-			filtered = filtered.filter((user) => user.role === filters.role);
-		}
-
-		if (filters.status) {
-			filtered = filtered.filter((user) => user.status === filters.status);
-		}
-
-		if (filters.gender) {
-			filtered = filtered.filter((user) => user.gender === filters.gender);
-		}
-
-		return filtered;
-	}, [users, filters]);
-
-	const handleSearchChange = useCallback((searchText: string) => {
-		setFilters((previousFilters) => ({
-			...previousFilters,
-			search: searchText,
-		}));
-	}, []);
+	const handleSearchChange = useCallback(
+		(searchText: string) => {
+			dispatch(setSearch(searchText));
+		},
+		[dispatch],
+	);
 
 	const handleRoleChange = useCallback(
 		(nextRole: UserDirectoryFiltersType["role"]) => {
-			setFilters((previousFilters) => ({
-				...previousFilters,
-				role: nextRole,
-			}));
+			dispatch(setRole(nextRole));
 		},
-		[],
+		[dispatch],
 	);
 
 	const handleStatusChange = useCallback(
 		(nextStatus: UserDirectoryFiltersType["status"]) => {
-			setFilters((previousFilters) => ({
-				...previousFilters,
-				status: nextStatus,
-			}));
+			dispatch(setStatus(nextStatus));
 		},
-		[],
+		[dispatch],
 	);
 
 	const handleGenderChange = useCallback(
 		(nextGender: UserDirectoryFiltersType["gender"]) => {
-			setFilters((previousFilters) => ({
-				...previousFilters,
-				gender: nextGender,
-			}));
+			dispatch(setGender(nextGender));
 		},
-		[],
+		[dispatch],
 	);
 
 	const handleClearFilters = useCallback(() => {
-		setFilters(initialFilters);
-	}, []);
+		dispatch(clearFilters());
+	}, [dispatch]);
 
-	const handleToggleUserStatus = useCallback((userId: string) => {
-		setUsers((currentUsers) =>
-			currentUsers.map((user) =>
-				user.id === userId
-					? {
-							...user,
-							status:
-								user.status === USER_STATUS.ACTIVE
-									? USER_STATUS.INACTIVE
-									: USER_STATUS.ACTIVE,
-						}
-					: user,
-			),
-		);
-	}, []);
+	const handleToggleUserStatus = useCallback(
+		(userId: UserType["id"]) => {
+			dispatch(toggleUserStatus(userId));
+		},
+		[dispatch],
+	);
 
 	const roleOptions = useMemo(
 		() => [{ value: "" as const, label: "All Roles" }, ...getRoleOptions()],
@@ -177,7 +139,7 @@ const UserListContent: FC = () => {
 			roleOptions={roleOptions}
 			statusOptions={statusOptions}
 			genderOptions={genderOptions}
-			users={filteredUsers}
+			users={users}
 			error={error}
 			onSearchChange={handleSearchChange}
 			onRoleChange={handleRoleChange}
