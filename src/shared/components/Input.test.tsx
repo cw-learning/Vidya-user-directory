@@ -72,6 +72,14 @@ describe("Input Component", () => {
 		);
 	});
 
+	it("should apply the autocomplete attribute when provided", () => {
+		renderComponent({ autoComplete: "email" });
+		expect(screen.getByLabelText(/test label/i)).toHaveAttribute(
+			"autocomplete",
+			"email",
+		);
+	});
+
 	it("should display error message and link it to input via aria-describedby", () => {
 		renderComponent({ error: "Invalid email address" });
 		const input = screen.getByLabelText(/test label/i);

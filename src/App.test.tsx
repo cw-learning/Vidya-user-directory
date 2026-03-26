@@ -70,4 +70,14 @@ describe("App error boundary integration", () => {
 		await screen.findByText(/david george/i);
 		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 	});
+
+	it("renders a skip link to the main content", () => {
+		vi.mocked(fetchUsers).mockResolvedValue({ users: [] });
+
+		renderApp();
+
+		expect(
+			screen.getByRole("link", { name: /skip to main content/i }),
+		).toHaveAttribute("href", "#main-content");
+	});
 });

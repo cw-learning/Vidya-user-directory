@@ -1,11 +1,15 @@
 import clsx from "clsx";
-import type { FC, ReactNode } from "react";
+import type { ButtonHTMLAttributes, FC, ReactNode } from "react";
 
 type ButtonVariantType = "primary" | "secondary";
 
 type ButtonType = "button" | "submit";
 
-export interface ButtonProps {
+export interface ButtonProps
+	extends Omit<
+		ButtonHTMLAttributes<HTMLButtonElement>,
+		"children" | "className" | "disabled" | "onClick" | "type"
+	> {
 	variant?: ButtonVariantType;
 	disabled?: boolean;
 	loading?: boolean;
@@ -15,11 +19,12 @@ export interface ButtonProps {
 	className?: string;
 }
 
-const baseClassName = "px-4 py-2 rounded font-medium transition-colors";
+const baseClassName =
+	"min-h-11 px-4 py-2 rounded font-medium transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-offset-2";
 const primaryClassName =
-	"bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600";
+	"bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700 focus-visible:ring-blue-300";
 const secondaryClassName =
-	"bg-gray-500 text-white hover:bg-gray-600 focus:bg-gray-600";
+	"bg-gray-700 text-white hover:bg-gray-800 focus:bg-gray-800 focus-visible:ring-gray-300";
 const disabledClassName = "opacity-50 cursor-not-allowed";
 const loadingClassName = "cursor-wait";
 
@@ -45,6 +50,7 @@ export const Button: FC<ButtonProps> = ({
 	onClick,
 	type = "button",
 	className,
+	...props
 }) => {
 	const buttonClassName = clsx(
 		getButtonClasses(variant, disabled, loading),
@@ -59,6 +65,7 @@ export const Button: FC<ButtonProps> = ({
 			type={type}
 			aria-busy={loading}
 			aria-live="polite"
+			{...props}
 		>
 			{loading ? "Loading..." : children}
 		</button>

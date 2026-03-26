@@ -7,7 +7,7 @@ import type { UserType } from "../types/user.types";
 
 interface UserCardProps {
 	user: UserType;
-	onToggleStatus: (id: string) => void;
+	onToggleStatus: (id: UserType["id"]) => void;
 }
 
 export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
@@ -17,6 +17,10 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 
 	const fullName = `${user.name.first} ${user.name.last}`;
 	const cardAriaLabel = `User ${fullName}, role ${user.role}, status ${user.status}, email ${user.email}`;
+	const toggleButtonLabel =
+		user.status === USER_STATUS.ACTIVE
+			? `Deactivate ${fullName}`
+			: `Activate ${fullName}`;
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
@@ -49,7 +53,7 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 	};
 
 	const cardClassName =
-		"group relative bg-white/75 border border-gray-200 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-1";
+		"group relative h-full overflow-hidden rounded-2xl border border-gray-200 bg-white/75 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none";
 	const statusBadgeClassName = `flex items-center gap-1 px-4 py-4 rounded-full text-xs font-semibold border shadow-sm ${getStatusColor(user.status)}`;
 	const profileImageClassName =
 		"w-20 h-20 rounded-full border-4 border-white shadow-lg";
@@ -60,15 +64,17 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 	const locationCardClassName =
 		"flex items-center gap-4 p-4 bg-gray-50 rounded-lg";
 	const toggleButtonClassName =
-		"w-full py-4 text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105";
+		"w-full rounded-lg py-4 text-sm font-semibold transition-all duration-200 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none";
 	const overlayClassName =
-		"absolute inset-0 bg-linear-to-br from-blue-50/0 to-purple-50/0 group-hover:from-blue-50/20 group-hover:to-purple-50/20 transition-all duration-300 pointer-events-none rounded-2xl";
+		"pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-blue-50/0 to-purple-50/0 transition-all duration-300 group-hover:from-blue-50/20 group-hover:to-purple-50/20 motion-reduce:transition-none";
 
 	return (
 		<Card as="article" className={cardClassName} aria-label={cardAriaLabel}>
 			<div className="absolute top-4 right-4 z-10">
 				<div className={statusBadgeClassName}>
-					<span className="text-sm">{getStatusIcon(user.status)}</span>
+					<span className="text-sm" aria-hidden="true">
+						{getStatusIcon(user.status)}
+					</span>
 					{user.status}
 				</div>
 			</div>
@@ -95,7 +101,10 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 					<h3 className="text-xl font-bold text-gray-900 mb-1">{fullName}</h3>
 					<p className="text-sm text-gray-600 mb-2">{user.email}</p>
 					<div className={roleBadgeClassName}>
-						<span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+						<span
+							className="w-2 h-2 rounded-full bg-blue-500"
+							aria-hidden="true"
+						></span>
 						{user.role}
 					</div>
 				</div>
@@ -104,7 +113,9 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 			<section className="px-8 pb-4">
 				<dl className="grid grid-cols-1 gap-3 text-sm">
 					<div className={locationCardClassName}>
-						<span className="text-gray-400">📍</span>
+						<span className="text-gray-400" aria-hidden="true">
+							📍
+						</span>
 						<div>
 							<dt className="font-medium text-gray-500 text-xs uppercase tracking-wide">
 								Location
@@ -122,6 +133,7 @@ export const UserCard = memo(({ user, onToggleStatus }: UserCardProps) => {
 					onClick={handleClickToggleStatus}
 					variant={user.status === USER_STATUS.ACTIVE ? "secondary" : "primary"}
 					className={toggleButtonClassName}
+					aria-label={toggleButtonLabel}
 				>
 					{user.status === USER_STATUS.ACTIVE
 						? "Deactivate User"

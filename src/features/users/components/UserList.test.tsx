@@ -72,6 +72,7 @@ describe("UserList Component", () => {
 			expect(screen.getByText(/sara nate/i)).toBeInTheDocument();
 		});
 		expect(screen.getByText(/2 users found/i)).toBeInTheDocument();
+		expect(screen.getByRole("list", { name: /user results/i })).toBeInTheDocument();
 	});
 
 	it("should display the error alert when the service fails", async () => {
@@ -108,6 +109,15 @@ describe("UserList Component", () => {
 		await user.click(clearBtn);
 		expect(searchInput).toHaveValue("");
 		expect(screen.getByText(/sara nate/i)).toBeInTheDocument();
+	});
+
+	it("should group filter controls inside a fieldset", async () => {
+		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		renderUserList();
+		await screen.findByLabelText(/search users/i);
+		expect(
+			screen.getByRole("group", { name: /filter the user directory/i }),
+		).toBeInTheDocument();
 	});
 
 	it("should update a user card's status locally when the toggle button is clicked", async () => {

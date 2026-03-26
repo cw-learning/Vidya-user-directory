@@ -70,7 +70,7 @@ describe("UserCard Component", () => {
 		renderComponent();
 		expect(screen.getByLabelText(/active/i)).toBeInTheDocument();
 		expect(
-			screen.getByRole("button", { name: /deactivate user/i }),
+			screen.getByRole("button", { name: /deactivate david george/i }),
 		).toBeInTheDocument();
 	});
 
@@ -79,7 +79,7 @@ describe("UserCard Component", () => {
 		renderComponent({ user: inactiveUser });
 		expect(screen.getByLabelText(/inactive/i)).toBeInTheDocument();
 		expect(
-			screen.getByRole("button", { name: /activate user/i }),
+			screen.getByRole("button", { name: /activate david george/i }),
 		).toBeInTheDocument();
 	});
 
@@ -108,7 +108,7 @@ describe("UserCard Component", () => {
 			user: { ...mockUser, status: USER_STATUS.ACTIVE },
 		});
 		expect(
-			screen.getByRole("button", { name: /deactivate/i }),
+			screen.getByRole("button", { name: /deactivate david george/i }),
 		).toBeInTheDocument();
 		rerender(
 			<UserCard
@@ -117,7 +117,7 @@ describe("UserCard Component", () => {
 			/>,
 		);
 		expect(
-			screen.getByRole("button", { name: /activate/i }),
+			screen.getByRole("button", { name: /activate david george/i }),
 		).toBeInTheDocument();
 	});
 });
