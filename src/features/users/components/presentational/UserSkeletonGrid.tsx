@@ -13,7 +13,7 @@ const skeletonDescriptionClassName = "text-gray-400 text-sm mb-8";
 const skeletonGridClassName =
 	"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
 const skeletonCardClassName =
-	"bg-white/75 p-6 animate-pulse border border-gray-100";
+	"bg-white/75 p-6 border border-gray-100 animate-pulse motion-reduce:animate-none";
 const skeletonAvatarClassName =
 	"h-16 w-16 rounded-full bg-gray-200 mx-auto mb-4";
 const skeletonNameClassName = "h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2";
@@ -22,7 +22,11 @@ const skeletonButtonClassName = "h-9 bg-gray-200 rounded w-full";
 
 export const UserSkeletonGrid = memo(() => {
 	return (
-		<div aria-live="polite" className={skeletonContainerClassName}>
+		<div
+			aria-live="polite"
+			aria-busy="true"
+			className={skeletonContainerClassName}
+		>
 			<p className={skeletonTitleClassName}>Loading users...</p>
 			<p className={skeletonDescriptionClassName}>Fetching data from server</p>
 			<div className={skeletonGridClassName}>

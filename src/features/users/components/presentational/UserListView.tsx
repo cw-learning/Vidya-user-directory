@@ -17,7 +17,7 @@ export type UserListViewProps = {
 	onStatusChange: (value: UserDirectoryFiltersType["status"]) => void;
 	onGenderChange: (value: UserDirectoryFiltersType["gender"]) => void;
 	onClearFilters: () => void;
-	onToggleStatus: (id: string) => void;
+	onToggleStatus: (id: UserType["id"]) => void;
 };
 
 const userListSectionClassName = "max-w-7xl mx-auto";

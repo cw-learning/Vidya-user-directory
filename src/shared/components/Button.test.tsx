@@ -75,4 +75,11 @@ describe("Button Component", () => {
 		expect(button).toHaveAttribute("aria-busy", "true");
 		expect(button).toHaveAttribute("aria-live", "polite");
 	});
+
+	it("passes through accessible button attributes", () => {
+		renderComponent({ "aria-label": "Open directory filters" });
+		expect(
+			screen.getByRole("button", { name: /open directory filters/i }),
+		).toBeInTheDocument();
+	});
 });
