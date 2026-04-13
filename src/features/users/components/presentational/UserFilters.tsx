@@ -1,4 +1,4 @@
-import { memo, useId } from "react";
+import { memo, useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "../../../../shared/components/Button";
 import { Card } from "../../../../shared/components/Card";
@@ -31,6 +31,20 @@ const filterFieldsetClassName =
 	"grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5";
 const clearButtonClassName =
 	"rounded-lg border border-gray-300 bg-white px-4 py-4 text-gray-900 hover:bg-gray-100 focus-visible:ring-gray-300";
+const searchValidationMinChars = 2;
+const searchDebounceMs = 400;
+
+const getSearchError = (searchValue: string): string => {
+	if (searchValue.trim().length === 0) {
+		return "";
+	}
+
+	if (searchValue.trim().length < searchValidationMinChars) {
+		return `Enter at least ${searchValidationMinChars} characters to search`;
+	}
+
+	return "";
+};
 
 export const UserFilters = memo(
 	({
@@ -45,6 +59,43 @@ export const UserFilters = memo(
 		onClearFilters,
 	}: UserFiltersProps) => {
 		const headingId = useId();
+		const [searchValue, setSearchValue] = useState<string>(filters.search);
+		const [searchTouched, setSearchTouched] = useState<boolean>(false);
+
+		useEffect(() => {
+			setSearchValue(filters.search);
+
+			if (filters.search.length === 0) {
+				setSearchTouched(false);
+			}
+		}, [filters.search]);
+
+		const searchError = useMemo(
+			() => getSearchError(searchValue),
+			[searchValue],
+		);
+
+		useEffect(() => {
+			if (searchError || searchValue === filters.search) {
+				return;
+			}
+
+			const debounceTimer = window.setTimeout(() => {
+				onSearchChange(searchValue);
+			}, searchDebounceMs);
+
+			return () => {
+				window.clearTimeout(debounceTimer);
+			};
+		}, [filters.search, onSearchChange, searchError, searchValue]);
+
+		const handleSearchInputChange = (value: string) => {
+			setSearchValue(value);
+		};
+
+		const handleSearchInputBlur = () => {
+			setSearchTouched(true);
+		};
 
 		return (
 			<Card className={filterCardClassName} aria-labelledby={headingId}>
@@ -64,16 +115,16 @@ export const UserFilters = memo(
 					</div>
 				</div>
 
-				<form
-					onSubmit={(submitEvent) => submitEvent.preventDefault()}
-				>
+				<form onSubmit={(submitEvent) => submitEvent.preventDefault()}>
 					<fieldset className={filterFieldsetClassName}>
 						<legend className="sr-only">Filter the user directory</legend>
 						<div className="lg:col-span-1">
 							<Input
 								label="Search users"
-								value={filters.search}
-								onChange={onSearchChange}
+								value={searchValue}
+								onChange={handleSearchInputChange}
+								onBlur={handleSearchInputBlur}
+								error={searchTouched ? searchError : undefined}
 								placeholder="Name or email..."
 								type="search"
 								autoComplete="off"

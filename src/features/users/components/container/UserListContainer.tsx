@@ -38,6 +38,7 @@ const UserListContent: FC = () => {
 	const loading = useAppSelector(selectLoading);
 	const error = useAppSelector(selectError);
 	const filters = useAppSelector(selectFilters);
+	type FilterFieldKey = keyof UserDirectoryFiltersType;
 
 	useEffect(() => {
 		let isMounted = true;
@@ -66,32 +67,52 @@ const UserListContent: FC = () => {
 		};
 	}, [dispatch, showBoundary]);
 
-	const handleSearchChange = useCallback(
-		(searchText: string) => {
-			dispatch(setSearch(searchText));
+	const handleFilterChange = useCallback(
+		(field: FilterFieldKey, value: string) => {
+			switch (field) {
+				case "search":
+					dispatch(setSearch(value));
+					break;
+				case "role":
+					dispatch(setRole(value));
+					break;
+				case "status":
+					dispatch(setStatus(value));
+					break;
+				case "gender":
+					dispatch(setGender(value));
+					break;
+			}
 		},
 		[dispatch],
+	);
+
+	const handleSearchChange = useCallback(
+		(searchText: string) => {
+			handleFilterChange("search", searchText);
+		},
+		[handleFilterChange],
 	);
 
 	const handleRoleChange = useCallback(
 		(nextRole: UserDirectoryFiltersType["role"]) => {
-			dispatch(setRole(nextRole));
+			handleFilterChange("role", nextRole);
 		},
-		[dispatch],
+		[handleFilterChange],
 	);
 
 	const handleStatusChange = useCallback(
 		(nextStatus: UserDirectoryFiltersType["status"]) => {
-			dispatch(setStatus(nextStatus));
+			handleFilterChange("status", nextStatus);
 		},
-		[dispatch],
+		[handleFilterChange],
 	);
 
 	const handleGenderChange = useCallback(
 		(nextGender: UserDirectoryFiltersType["gender"]) => {
-			dispatch(setGender(nextGender));
+			handleFilterChange("gender", nextGender);
 		},
-		[dispatch],
+		[handleFilterChange],
 	);
 
 	const handleClearFilters = useCallback(() => {
