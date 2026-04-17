@@ -30,6 +30,23 @@ import { UserGenderType, type UserType } from "../../types/user.types";
 import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
+type FilterFieldKey = keyof UserDirectoryFiltersType;
+type FilterActionCreator<K extends FilterFieldKey> = (
+	value: UserDirectoryFiltersType[K],
+) => {
+	type: string;
+	payload: UserDirectoryFiltersType[K];
+};
+
+const filterActionByField: {
+	[K in FilterFieldKey]: FilterActionCreator<K>;
+} = {
+	search: setSearch,
+	role: setRole,
+	status: setStatus,
+	gender: setGender,
+};
+
 const UserListContent: FC = () => {
 	const { showBoundary } = useErrorBoundary();
 	const dispatch = useAppDispatch();
@@ -38,7 +55,6 @@ const UserListContent: FC = () => {
 	const loading = useAppSelector(selectLoading);
 	const error = useAppSelector(selectError);
 	const filters = useAppSelector(selectFilters);
-	type FilterFieldKey = keyof UserDirectoryFiltersType;
 
 	useEffect(() => {
 		let isMounted = true;
@@ -68,51 +84,13 @@ const UserListContent: FC = () => {
 	}, [dispatch, showBoundary]);
 
 	const handleFilterChange = useCallback(
-		(field: FilterFieldKey, value: string) => {
-			switch (field) {
-				case "search":
-					dispatch(setSearch(value));
-					break;
-				case "role":
-					dispatch(setRole(value));
-					break;
-				case "status":
-					dispatch(setStatus(value));
-					break;
-				case "gender":
-					dispatch(setGender(value));
-					break;
-			}
+		<K extends FilterFieldKey>(
+			field: K,
+			value: UserDirectoryFiltersType[K],
+		) => {
+			dispatch(filterActionByField[field](value));
 		},
 		[dispatch],
-	);
-
-	const handleSearchChange = useCallback(
-		(searchText: string) => {
-			handleFilterChange("search", searchText);
-		},
-		[handleFilterChange],
-	);
-
-	const handleRoleChange = useCallback(
-		(nextRole: UserDirectoryFiltersType["role"]) => {
-			handleFilterChange("role", nextRole);
-		},
-		[handleFilterChange],
-	);
-
-	const handleStatusChange = useCallback(
-		(nextStatus: UserDirectoryFiltersType["status"]) => {
-			handleFilterChange("status", nextStatus);
-		},
-		[handleFilterChange],
-	);
-
-	const handleGenderChange = useCallback(
-		(nextGender: UserDirectoryFiltersType["gender"]) => {
-			handleFilterChange("gender", nextGender);
-		},
-		[handleFilterChange],
 	);
 
 	const handleClearFilters = useCallback(() => {
@@ -162,10 +140,7 @@ const UserListContent: FC = () => {
 			genderOptions={genderOptions}
 			users={users}
 			error={error}
-			onSearchChange={handleSearchChange}
-			onRoleChange={handleRoleChange}
-			onStatusChange={handleStatusChange}
-			onGenderChange={handleGenderChange}
+			onFilterChange={handleFilterChange}
 			onClearFilters={handleClearFilters}
 			onToggleStatus={handleToggleUserStatus}
 		/>
