@@ -30,6 +30,23 @@ import { UserGenderType, type UserType } from "../../types/user.types";
 import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
+type FilterFieldKey = keyof UserDirectoryFiltersType;
+type FilterActionCreator<K extends FilterFieldKey> = (
+	value: UserDirectoryFiltersType[K],
+) => {
+	type: string;
+	payload: UserDirectoryFiltersType[K];
+};
+
+const filterActionByField: {
+	[K in FilterFieldKey]: FilterActionCreator<K>;
+} = {
+	search: setSearch,
+	role: setRole,
+	status: setStatus,
+	gender: setGender,
+};
+
 const UserListContent: FC = () => {
 	const { showBoundary } = useErrorBoundary();
 	const dispatch = useAppDispatch();
@@ -66,30 +83,12 @@ const UserListContent: FC = () => {
 		};
 	}, [dispatch, showBoundary]);
 
-	const handleSearchChange = useCallback(
-		(searchText: string) => {
-			dispatch(setSearch(searchText));
-		},
-		[dispatch],
-	);
-
-	const handleRoleChange = useCallback(
-		(nextRole: UserDirectoryFiltersType["role"]) => {
-			dispatch(setRole(nextRole));
-		},
-		[dispatch],
-	);
-
-	const handleStatusChange = useCallback(
-		(nextStatus: UserDirectoryFiltersType["status"]) => {
-			dispatch(setStatus(nextStatus));
-		},
-		[dispatch],
-	);
-
-	const handleGenderChange = useCallback(
-		(nextGender: UserDirectoryFiltersType["gender"]) => {
-			dispatch(setGender(nextGender));
+	const handleFilterChange = useCallback(
+		<K extends FilterFieldKey>(
+			field: K,
+			value: UserDirectoryFiltersType[K],
+		) => {
+			dispatch(filterActionByField[field](value));
 		},
 		[dispatch],
 	);
@@ -141,10 +140,7 @@ const UserListContent: FC = () => {
 			genderOptions={genderOptions}
 			users={users}
 			error={error}
-			onSearchChange={handleSearchChange}
-			onRoleChange={handleRoleChange}
-			onStatusChange={handleStatusChange}
-			onGenderChange={handleGenderChange}
+			onFilterChange={handleFilterChange}
 			onClearFilters={handleClearFilters}
 			onToggleStatus={handleToggleUserStatus}
 		/>

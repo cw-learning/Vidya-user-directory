@@ -5,6 +5,7 @@ export interface InputProps {
 	label: string;
 	value: string;
 	onChange: (value: string) => void;
+	onBlur?: () => void;
 	type?: string;
 	placeholder?: string;
 	id?: string;
@@ -16,6 +17,7 @@ export const Input: FC<InputProps> = ({
 	label,
 	value,
 	onChange,
+	onBlur,
 	type = "text",
 	placeholder,
 	id,
@@ -43,6 +45,7 @@ export const Input: FC<InputProps> = ({
 				type={type}
 				value={value}
 				onChange={handleOnChangeInput}
+				onBlur={onBlur}
 				placeholder={placeholder}
 				autoComplete={autoComplete}
 				className={`min-h-11 w-full rounded-md border px-4 py-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 ${

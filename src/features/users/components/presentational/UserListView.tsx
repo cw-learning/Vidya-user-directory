@@ -12,10 +12,10 @@ export type UserListViewProps = {
 	genderOptions: SelectOptionType<UserDirectoryFiltersType["gender"]>[];
 	users: UserType[];
 	error: string | null;
-	onSearchChange: (value: string) => void;
-	onRoleChange: (value: UserDirectoryFiltersType["role"]) => void;
-	onStatusChange: (value: UserDirectoryFiltersType["status"]) => void;
-	onGenderChange: (value: UserDirectoryFiltersType["gender"]) => void;
+	onFilterChange: <K extends keyof UserDirectoryFiltersType>(
+		field: K,
+		value: UserDirectoryFiltersType[K],
+	) => void;
 	onClearFilters: () => void;
 	onToggleStatus: (id: UserType["id"]) => void;
 };
@@ -30,10 +30,7 @@ export const UserListView = memo(
 		genderOptions,
 		users,
 		error,
-		onSearchChange,
-		onRoleChange,
-		onStatusChange,
-		onGenderChange,
+		onFilterChange,
 		onClearFilters,
 		onToggleStatus,
 	}: UserListViewProps) => {
@@ -44,10 +41,7 @@ export const UserListView = memo(
 					roleOptions={roleOptions}
 					statusOptions={statusOptions}
 					genderOptions={genderOptions}
-					onSearchChange={onSearchChange}
-					onRoleChange={onRoleChange}
-					onStatusChange={onStatusChange}
-					onGenderChange={onGenderChange}
+					onFilterChange={onFilterChange}
 					onClearFilters={onClearFilters}
 				/>
 				<UserResults
