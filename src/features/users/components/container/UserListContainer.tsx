@@ -1,32 +1,24 @@
-import {
-	type ErrorInfo,
-	type FC,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
-import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
+import { useQueryClient } from "@tanstack/react-query";
+import { type FC, useCallback, useMemo } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { getRoleOptions } from "../../../../constants/userRoles";
 import { USER_STATUS } from "../../../../constants/userStatus";
 import { ErrorFallback } from "../../../../shared/components/ErrorFallback";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
+import { useUsersQuery } from "../../hooks/useUsersQuery";
+import { userQueryKeys } from "../../queryKeys";
 import {
 	clearFilters,
-	loadUsers,
-	selectError,
-	selectFilteredUsers,
 	selectFilters,
-	selectLoading,
 	setGender,
 	setRole,
 	setSearch,
 	setStatus,
-	toggleUserStatus,
 } from "../../store/userSlice";
-import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
 import { UserGenderType, type UserType } from "../../types/user.types";
+import type { UserDirectoryFiltersType } from "../../types/userDirectoryFilters.types";
+import { filterUsers, getToggledUserStatus } from "../../utils/userFilters";
 import { UserListView } from "../presentational/UserListView";
 import { UserSkeletonGrid } from "../presentational/UserSkeletonGrid";
 
@@ -48,40 +40,22 @@ const filterActionByField: {
 };
 
 const UserListContent: FC = () => {
-	const { showBoundary } = useErrorBoundary();
 	const dispatch = useAppDispatch();
+	const queryClient = useQueryClient();
+	const {
+		data: queriedUsers = [],
+		error: usersQueryError,
+		isError: isUsersQueryError,
+		isPending: isUsersQueryPending,
+		refetch,
+	} = useUsersQuery();
 
-	const users = useAppSelector(selectFilteredUsers);
-	const loading = useAppSelector(selectLoading);
-	const error = useAppSelector(selectError);
 	const filters = useAppSelector(selectFilters);
 
-	useEffect(() => {
-		let isMounted = true;
-
-		const loadData = async () => {
-			const resultAction = await dispatch(loadUsers());
-
-			if (!isMounted) {
-				return;
-			}
-
-			if (
-				loadUsers.rejected.match(resultAction) &&
-				!resultAction.meta.condition &&
-				!resultAction.meta.aborted &&
-				resultAction.payload === undefined
-			) {
-				showBoundary(resultAction.error);
-			}
-		};
-
-		void loadData();
-
-		return () => {
-			isMounted = false;
-		};
-	}, [dispatch, showBoundary]);
+	const users = useMemo(
+		() => filterUsers(queriedUsers, filters),
+		[queriedUsers, filters],
+	);
 
 	const handleFilterChange = useCallback(
 		<K extends FilterFieldKey>(
@@ -99,10 +73,25 @@ const UserListContent: FC = () => {
 
 	const handleToggleUserStatus = useCallback(
 		(userId: UserType["id"]) => {
-			dispatch(toggleUserStatus(userId));
+			queryClient.setQueryData<UserType[]>(
+				userQueryKeys.list(),
+				(currentUsers = []) =>
+					currentUsers.map((user) =>
+						user.id === userId
+							? {
+									...user,
+									status: getToggledUserStatus(user.status),
+								}
+							: user,
+					),
+			);
 		},
-		[dispatch],
+		[queryClient],
 	);
+
+	const handleRetryUsers = useCallback(() => {
+		void refetch();
+	}, [refetch]);
 
 	const roleOptions = useMemo(
 		() => [{ value: "" as const, label: "All Roles" }, ...getRoleOptions()],
@@ -128,7 +117,7 @@ const UserListContent: FC = () => {
 		[],
 	);
 
-	if (loading) {
+	if (isUsersQueryPending) {
 		return <UserSkeletonGrid />;
 	}
 
@@ -139,34 +128,19 @@ const UserListContent: FC = () => {
 			statusOptions={statusOptions}
 			genderOptions={genderOptions}
 			users={users}
-			error={error}
+			error={isUsersQueryError ? usersQueryError.message : null}
 			onFilterChange={handleFilterChange}
 			onClearFilters={handleClearFilters}
 			onToggleStatus={handleToggleUserStatus}
+			onRetryUsers={handleRetryUsers}
 		/>
 	);
 };
 
-const handleBoundaryError = (error: unknown, errorInfo: ErrorInfo) => {
-	console.error("[ErrorBoundary] Caught error:", error);
-	console.error("[ErrorBoundary] Component stack:", errorInfo.componentStack);
-};
-
 export const UserListContainer: FC = () => {
-	const [retryKey, setRetryKey] = useState<number>(0);
-
-	const handleReset = useCallback(() => {
-		setRetryKey((previousKey) => previousKey + 1);
-	}, []);
-
 	return (
-		<ErrorBoundary
-			FallbackComponent={ErrorFallback}
-			onReset={handleReset}
-			resetKeys={[retryKey]}
-			onError={handleBoundaryError}
-		>
-			<UserListContent key={retryKey} />
+		<ErrorBoundary FallbackComponent={ErrorFallback}>
+			<UserListContent />
 		</ErrorBoundary>
 	);
 };

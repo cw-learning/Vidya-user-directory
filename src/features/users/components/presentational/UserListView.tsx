@@ -18,6 +18,7 @@ export type UserListViewProps = {
 	) => void;
 	onClearFilters: () => void;
 	onToggleStatus: (id: UserType["id"]) => void;
+	onRetryUsers: () => void;
 };
 
 const userListSectionClassName = "max-w-7xl mx-auto";
@@ -33,6 +34,7 @@ export const UserListView = memo(
 		onFilterChange,
 		onClearFilters,
 		onToggleStatus,
+		onRetryUsers,
 	}: UserListViewProps) => {
 		return (
 			<section className={userListSectionClassName} aria-label="User directory">
@@ -48,6 +50,7 @@ export const UserListView = memo(
 					users={users}
 					error={error}
 					onToggleStatus={onToggleStatus}
+					onRetryUsers={onRetryUsers}
 				/>
 			</section>
 		);

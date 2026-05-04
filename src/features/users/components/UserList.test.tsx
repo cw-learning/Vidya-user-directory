@@ -1,21 +1,33 @@
-import { StrictMode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_ROLES } from "../../../constants/userRoles";
 import { USER_STATUS } from "../../../constants/userStatus";
-import { createAppStore, type AppStore } from "../../../store/store";
-import { fetchUsers } from "../services/userService";
+import { type AppStore, createAppStore } from "../../../store/store";
+import { fetchUserDirectoryUsers } from "../services/userService";
+import { mockUsers } from "../testing/fixtures/user.fixture";
 import { UserGenderType } from "../types/user.types";
 import { UserList } from "./UserList";
 
 vi.mock("../services/userService", () => ({
-	fetchUsers: vi.fn(),
+	fetchUserDirectoryUsers: vi.fn(),
 }));
 
 let user: ReturnType<typeof userEvent.setup>;
 let store: AppStore;
+let queryClient: QueryClient;
+
+const createTestQueryClient = (): QueryClient =>
+	new QueryClient({
+		defaultOptions: {
+			queries: {
+				retry: false,
+			},
+		},
+	});
 
 const renderUserList = ({
 	strictMode = false,
@@ -23,51 +35,33 @@ const renderUserList = ({
 	strictMode?: boolean;
 } = {}) => {
 	const content = (
-		<Provider store={store}>
-			<UserList />
-		</Provider>
+		<QueryClientProvider client={queryClient}>
+			<Provider store={store}>
+				<UserList />
+			</Provider>
+		</QueryClientProvider>
 	);
 
 	return render(strictMode ? <StrictMode>{content}</StrictMode> : content);
 };
 
-const mockUsers = [
-	{
-		id: "1",
-		name: { first: "David", last: "George" },
-		email: "david@example.com",
-		gender: UserGenderType.MALE,
-		role: USER_ROLES.ADMIN,
-		status: USER_STATUS.ACTIVE,
-		city: "Delhi",
-	},
-	{
-		id: "2",
-		name: { first: "Sara", last: "nate" },
-		email: "sara@example.com",
-		gender: UserGenderType.FEMALE,
-		role: USER_ROLES.ANALYST,
-		status: USER_STATUS.INACTIVE,
-		city: "Mumbai",
-	},
-];
-
 describe("UserList Component", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		store = createAppStore();
+		queryClient = createTestQueryClient();
 		user = userEvent.setup();
 	});
 
 	it("should show the loading spinner when the component first mounts", () => {
-		vi.mocked(fetchUsers).mockReturnValue(new Promise(() => {}));
+		vi.mocked(fetchUserDirectoryUsers).mockReturnValue(new Promise(() => {}));
 		renderUserList();
 		expect(screen.getByText(/loading users.../i)).toBeInTheDocument();
 		expect(screen.queryByText(/david george/i)).not.toBeInTheDocument();
 	});
 
 	it("should display the list of users after a successful fetch", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 		await waitFor(() => {
 			expect(screen.getByText(/david george/i)).toBeInTheDocument();
@@ -81,7 +75,9 @@ describe("UserList Component", () => {
 
 	it("should display the error alert when the service fails", async () => {
 		const errorMessage = "API is currently down";
-		vi.mocked(fetchUsers).mockResolvedValue({ error: errorMessage });
+		vi.mocked(fetchUserDirectoryUsers).mockRejectedValue(
+			new Error(errorMessage),
+		);
 		renderUserList();
 		await waitFor(() => {
 			const errorAlert = screen.getByRole("alert");
@@ -95,7 +91,7 @@ describe("UserList Component", () => {
 	});
 
 	it("should show the empty state when no users match the filter", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 		const searchInput = await screen.findByLabelText(/search users/i);
 		await user.type(searchInput, "NonExistentUser");
@@ -106,7 +102,7 @@ describe("UserList Component", () => {
 	});
 
 	it("should clear filters and reset the list when 'Clear Filters' is clicked", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 		const searchInput = await screen.findByLabelText(/search users/i);
 		await user.type(searchInput, "David");
@@ -122,7 +118,7 @@ describe("UserList Component", () => {
 	});
 
 	it("should apply role, status, and gender filters through their select controls", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 
 		await screen.findByText(/david george/i);
@@ -164,7 +160,7 @@ describe("UserList Component", () => {
 	});
 
 	it("should show validation for keyboard submit and clear stale debounce states", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 
 		const searchInput = await screen.findByLabelText(/search users/i);
@@ -207,7 +203,7 @@ describe("UserList Component", () => {
 	});
 
 	it("should group filter controls inside a fieldset", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 		await screen.findByLabelText(/search users/i);
 		expect(
@@ -216,7 +212,7 @@ describe("UserList Component", () => {
 	});
 
 	it("should update a user card's status locally when the toggle button is clicked", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList();
 		const davidCard = await screen.findByLabelText(/User David George/i);
 		const deactivateBtn = within(davidCard).getByRole("button", {
@@ -228,13 +224,26 @@ describe("UserList Component", () => {
 		).toBeInTheDocument();
 	});
 
-	it("should ignore the strict mode duplicate load dispatch", async () => {
-		vi.mocked(fetchUsers).mockResolvedValue({ users: mockUsers });
+	it("should de-duplicate strict mode user queries", async () => {
+		vi.mocked(fetchUserDirectoryUsers).mockResolvedValue(mockUsers);
 		renderUserList({ strictMode: true });
 		await screen.findByText(/david george/i);
-		expect(fetchUsers).toHaveBeenCalledTimes(1);
+		expect(fetchUserDirectoryUsers).toHaveBeenCalledTimes(1);
 		expect(
 			screen.queryByText(/runtime error occurred/i),
 		).not.toBeInTheDocument();
+	});
+
+	it("should retry the users query when the retry button is clicked", async () => {
+		vi.mocked(fetchUserDirectoryUsers)
+			.mockRejectedValueOnce(new Error("Network failure"))
+			.mockResolvedValueOnce(mockUsers);
+
+		renderUserList();
+
+		await user.click(await screen.findByRole("button", { name: /retry/i }));
+
+		expect(await screen.findByText(/david george/i)).toBeInTheDocument();
+		expect(fetchUserDirectoryUsers).toHaveBeenCalledTimes(2);
 	});
 });
