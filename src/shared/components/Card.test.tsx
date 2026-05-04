@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { Card } from "./Card";
 
 const renderCard = (content: string, className?: string) => {
-	return render(<Card className={className}>{content}</Card>);
+	const cardProps = className ? { className } : {};
+	return render(<Card {...cardProps}>{content}</Card>);
 };
 
 describe("Card Component", () => {

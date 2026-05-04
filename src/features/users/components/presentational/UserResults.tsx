@@ -7,6 +7,7 @@ export type UserResultsProps = {
 	users: UserType[];
 	error: string | null;
 	onToggleStatus: (id: UserType["id"]) => void;
+	onRetryUsers: () => void;
 };
 
 const resultsHeadingClassName = "text-2xl font-bold text-gray-900";
@@ -15,6 +16,8 @@ const liveIndicatorClassName = "flex items-center gap-2 text-sm text-gray-700";
 const liveIndicatorDotClassName = "w-2 h-2 bg-green-500 rounded-full";
 const errorAlertClassName =
 	"bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-6 flex items-center gap-4";
+const errorRetryButtonClassName =
+	"ml-auto rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2";
 const emptyStateContainerClassName =
 	"text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200";
 const emptyStateIconClassName = "text-6xl mb-4";
@@ -24,7 +27,7 @@ const userGridClassName =
 	"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
 
 export const UserResults = memo(
-	({ users, error, onToggleStatus }: UserResultsProps) => {
+	({ users, error, onToggleStatus, onRetryUsers }: UserResultsProps) => {
 		const headingId = useId();
 
 		return (
@@ -61,6 +64,13 @@ export const UserResults = memo(
 								Unable to load users. Please try again later.
 							</p>
 						</div>
+						<button
+							type="button"
+							className={errorRetryButtonClassName}
+							onClick={onRetryUsers}
+						>
+							Retry
+						</button>
 					</div>
 				)}
 
